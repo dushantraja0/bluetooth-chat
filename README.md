@@ -11,7 +11,7 @@ A **WhatsApp-style** real-time chat application that connects two devices over *
 
 ## 📱 Live Demo
 
-> **[https://YOUR-USERNAME.github.io/bluetooth-chat](https://YOUR-USERNAME.github.io/bluetooth-chat)**
+> **https://dushantraja0.github.io/bluetooth-chat/bluetooth-chat-app/**
 > *(Replace YOUR-USERNAME with your GitHub username after deployment)*
 
 ---
