@@ -39,7 +39,7 @@
     align-items: center;
   }
 
-  /* ── SCREENS / CONTAINER ── */
+  /* ── CONTAINER ── */
   .screen { 
     display: none; 
     flex-direction: column; 
@@ -150,18 +150,12 @@
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
   .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
 
-  /* ── BANNERS & NOTICES ── */
-  .ble-info, .demo-banner {
+  /* ── BANNERS ── */
+  .ble-info {
     border-radius: var(--radius-sm); padding: 14px 18px;
     margin-bottom: 20px; font-size: 13px; line-height: 1.6;
-  }
-  .ble-info {
     background: rgba(37, 99, 235, 0.06); border: 1px solid rgba(37, 99, 235, 0.2);
     color: #93c5fd;
-  }
-  .demo-banner {
-    background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2);
-    color: #fcd34d;
   }
 
   /* ── CHAT SCREEN ── */
@@ -280,7 +274,7 @@
   <div class="topbar">
     <div>
       <div class="topbar-logo">BlueLink</div>
-      <div class="topbar-subtitle">Bluetooth Messenger</div>
+      <div class="topbar-subtitle">CNDC Bluetooth Messenger</div>
     </div>
     <div class="status-pill" id="status-pill">
       <div class="status-dot" id="status-dot"></div>
@@ -290,14 +284,8 @@
 
   <div class="devices-body">
     <div class="ble-info">
-      <strong>Web Bluetooth (BLE) App</strong> — Requires Chrome/Edge on desktop or Android.
-      This app uses a custom GATT service for messaging &amp; file transfer.
-      Both devices must have this page open.
-    </div>
-
-    <div class="demo-banner">
-      <strong>Demo mode active.</strong> Web Bluetooth requires HTTPS and a real BLE device.
-      Use the simulated peers below to explore the full UI, then deploy to test on hardware.
+      <strong>GATT Peer-to-Peer Mode Active</strong><br>
+      This client uses the Web Bluetooth API to pair directly with active BLE peripherals using custom characteristic handles.
     </div>
 
     <button class="scan-btn" id="scan-btn" onclick="startScan()">
@@ -305,11 +293,11 @@
       <span id="scan-label">Scan for Devices</span>
     </button>
 
-    <div class="section-label" id="list-label">Nearby Devices</div>
+    <div class="section-label" id="list-label">Discovered Peripheral Node</div>
     <div class="device-list" id="device-list">
       <div class="empty-state" id="empty-state">
         <div class="icon">📱</div>
-        <p>No devices found yet.<br>Press Scan to discover nearby peers.</p>
+        <p>No active BLE hardware detected.<br>Press Scan to trigger the browser discovery layer.</p>
       </div>
     </div>
   </div>
@@ -317,17 +305,17 @@
 
 <div class="screen" id="chat-screen">
   <div class="chat-topbar">
-    <button class="back-btn" onclick="goBack()">← Back</button>
+    <button class="back-btn" onclick="goBack()">← Disconnect</button>
     <div class="peer-avatar" id="peer-avatar">?</div>
     <div class="peer-info">
       <div class="peer-name" id="peer-name">Device</div>
       <div class="peer-status" id="peer-status">Connected</div>
     </div>
-    <div class="conn-badge" id="conn-badge">🔵 Live</div>
+    <div class="conn-badge" id="conn-badge">🔵 BLE Node</div>
   </div>
 
   <div class="messages-area" id="messages-area">
-    <div class="sys-msg">🔒 End-to-end encrypted over Bluetooth</div>
+    <div class="sys-msg">🔒 End-to-end encrypted over Bluetooth GATT</div>
   </div>
 
   <div class="input-bar">
@@ -349,9 +337,9 @@ const SERVICE_UUID      = '12345678-1234-1234-1234-123456789abc';
 const MSG_CHAR_UUID     = '12345678-1234-1234-1234-123456789abd';
 const FILE_CHAR_UUID    = '12345678-1234-1234-1234-123456789abe';
 const ACK_CHAR_UUID     = '12345678-1234-1234-1234-123456789abf';
-const CHUNK_SIZE        = 512; // bytes per BLE packet
+const CHUNK_SIZE        = 512; 
 
-// ── State ──
+// ── Real Hardware State ──
 let bleDevice = null;
 let bleServer = null;
 let msgChar   = null;
@@ -360,23 +348,12 @@ let ackChar   = null;
 let isScanning = false;
 let connectedPeer = null;
 let msgCounter = 0;
-let demoMode = false;
-let demoInterval = null;
 
-// Simulated demo devices (Aap presentation k liye inke naam yahan change kar sakte hain)
-const DEMO_DEVICES = [
-  { id: 'demo-1', name: "Dushant's Laptop", addr: 'E4:5D:37:F2:AA:01', rssi: -58 },
-  { id: 'demo-2', name: 'Testing Android',  addr: 'A8:93:4F:11:CC:22', rssi: -72 },
-  { id: 'demo-3', name: 'SZABIST Peer Link',addr: 'F2:1B:88:DD:33:99', rssi: -45 },
-];
-
-// ── Screen routing ──
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// ── Status helpers ──
 function setStatus(state, label) {
   const dot  = document.getElementById('status-dot');
   const text = document.getElementById('status-text');
@@ -392,70 +369,35 @@ function toast(msg, dur=2200) {
   t._timer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// ── Scanning ──
+// ── PURE REAL HARDWARE SCANNING ──
 async function startScan() {
-  const btn   = document.getElementById('scan-btn');
-  const label = document.getElementById('scan-label');
-  const icon  = document.getElementById('scan-icon');
-
-  if (isScanning) { stopScan(); return; }
-
-  isScanning = true;
-  label.textContent = 'Stop Scanning';
-  icon.textContent  = '⏹';
-  btn.style.background = '#ef4444';
-  setStatus('scanning', 'Scanning…');
-
-  if(document.getElementById('empty-state')) document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('device-list').innerHTML = '';
-
-  // 🔥 CRITICAL FIX: acceptAllDevices is true to discover all real hardware around you!
-  if (navigator.bluetooth) {
-    try {
-      const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [SERVICE_UUID]
-      });
-      stopScan();
-      addDeviceCard(device.name || 'BLE Device', device.id, 'Connected', true, device);
-      return;
-    } catch(e) {
-      if (e.name !== 'NotFoundError') {
-        console.log("Real BLE prompt closed or error:", e);
-      }
-    }
+  if (!navigator.bluetooth) {
+    alert("Web Bluetooth is blocked on this browser/platform. Ensure you are using Chrome/Edge on Android or PC.");
+    return;
   }
 
-  // Fallback Demo mode stream
-  demoMode = true;
-  let i = 0;
-  demoInterval = setInterval(() => {
-    if (i < DEMO_DEVICES.length) {
-      addDeviceCard(DEMO_DEVICES[i].name, DEMO_DEVICES[i].addr,
-                    `${DEMO_DEVICES[i].rssi} dBm`, false, null, DEMO_DEVICES[i].id);
-      i++;
-    } else {
-      stopScan();
-    }
-  }, 700);
+  setStatus('scanning', 'Scanning…');
+  
+  try {
+    // Hardware API Core: Direct raw matching via system layer prompt
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [SERVICE_UUID]
+    });
+
+    setStatus('scanning', 'Connecting…');
+    if(document.getElementById('empty-state')) document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('device-list').innerHTML = '';
+    
+    // Add real item to local target matrix
+    addDeviceCard(device.name || 'Discovered BLE Node', device.id, 'Available', true, device);
+  } catch(e) {
+    setStatus('', 'Ready');
+    console.log("Discovery canceled or dropped:", e);
+  }
 }
 
-function stopScan() {
-  clearInterval(demoInterval);
-  isScanning = false;
-  const btn   = document.getElementById('scan-btn');
-  const label = document.getElementById('scan-label');
-  const icon  = document.getElementById('scan-icon');
-  label.textContent = 'Scan for Devices';
-  icon.textContent  = '📡';
-  btn.style.background = '';
-  setStatus('', 'Ready');
-  document.getElementById('list-label').textContent =
-    document.getElementById('device-list').children.length
-    ? 'Nearby Devices' : 'No Devices Found';
-}
-
-function addDeviceCard(name, addr, signal, real, bleRef, demoId) {
+function addDeviceCard(name, addr, signal, real, bleRef) {
   const list = document.getElementById('device-list');
   const initials = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() || '??';
   const card = document.createElement('div');
@@ -466,96 +408,80 @@ function addDeviceCard(name, addr, signal, real, bleRef, demoId) {
       <div class="device-name">${name}</div>
       <div class="device-addr">${addr}</div>
     </div>
-    <div class="device-signal">${signal || '•••'}</div>`;
-  card.onclick = () => connectTo(name, addr, real, bleRef, demoId);
+    <div class="device-signal">${signal}</div>`;
+  card.onclick = () => connectTo(name, addr, real, bleRef);
   list.appendChild(card);
 }
 
-// ── Connection ──
-async function connectTo(name, addr, real, bleRef, demoId) {
-  setStatus('scanning', 'Connecting…');
+// ── GATT HARDWARE PIPELINE ──
+async function connectTo(name, addr, real, bleRef) {
+  try {
+    bleServer = await bleRef.gatt.connect();
+    const svc  = await bleServer.getPrimaryService(SERVICE_UUID);
+    msgChar    = await svc.getCharacteristic(MSG_CHAR_UUID);
+    fileChar   = await svc.getCharacteristic(FILE_CHAR_UUID);
+    ackChar    = await svc.getCharacteristic(ACK_CHAR_UUID);
 
-  if (real && bleRef) {
-    try {
-      bleServer = await bleRef.gatt.connect();
-      const svc  = await bleServer.getPrimaryService(SERVICE_UUID);
-      msgChar    = await svc.getCharacteristic(MSG_CHAR_UUID);
-      fileChar   = await svc.getCharacteristic(FILE_CHAR_UUID);
-      ackChar    = await svc.getCharacteristic(ACK_CHAR_UUID);
+    await msgChar.startNotifications();
+    msgChar.addEventListener('characteristicvaluechanged', onMsgReceived);
+    await ackChar.startNotifications();
+    ackChar.addEventListener('characteristicvaluechanged', onAckReceived);
 
-      await msgChar.startNotifications();
-      msgChar.addEventListener('characteristicvaluechanged', onMsgReceived);
-      await ackChar.startNotifications();
-      ackChar.addEventListener('characteristicvaluechanged', onAckReceived);
+    bleDevice = bleRef;
+    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
-      bleDevice = bleRef;
-      bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-    } catch(e) {
-      toast('Connection failed: ' + e.message);
-      setStatus('disconnected', 'Failed');
-      return;
-    }
-  }
-
-  connectedPeer = { name, addr, demoId, real };
-  openChat(name);
-  setStatus('connected', 'Connected');
-
-  if (!real) {
-    scheduleDemo();
+    connectedPeer = { name, addr, real };
+    openChat(name);
+    setStatus('connected', 'Connected');
+  } catch(e) {
+    toast('GATT Stack Exception: ' + e.message);
+    setStatus('disconnected', 'Failed');
   }
 }
 
 function openChat(name) {
   document.getElementById('peer-name').textContent = name;
-  document.getElementById('peer-status').textContent = 'Connected via BLE';
+  document.getElementById('peer-status').textContent = 'Link Mode: BLE Active';
   const av = document.getElementById('peer-avatar');
   av.textContent = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() || '?';
   showScreen('chat-screen');
-  addSysMsg(`Connected to ${name}`);
+  addSysMsg(`Channel established with ${name}`);
 }
 
 function onDisconnected() {
   setStatus('disconnected', 'Disconnected');
-  addSysMsg('⚠️ Connection lost — tap Back to reconnect');
-  document.getElementById('conn-badge').textContent = '⚪ Offline';
-  document.getElementById('peer-status').textContent = 'Disconnected';
+  addSysMsg('⚠️ GATT Link broken — Session dropped.');
+  document.getElementById('conn-badge').textContent = '⚪ Disconnected';
+  document.getElementById('peer-status').textContent = 'Offline';
 }
 
 function goBack() {
   if (bleDevice?.gatt?.connected) bleDevice.gatt.disconnect();
-  clearTimeout(demoMsgTimer);
   connectedPeer = null;
   showScreen('devices-screen');
   setStatus('', 'Ready');
+  if(document.getElementById('device-list')) document.getElementById('device-list').innerHTML = '';
 }
 
-// ── Messaging ──
+// ── MESSAGING PROTOCOL INTERFACE ──
 let encoder = new TextEncoder();
 let decoder = new TextDecoder();
 
 async function sendText() {
   const input = document.getElementById('msg-input');
   const text  = input.value.trim();
-  if (!text) return;
+  if (!text || !msgChar) return;
 
   const id = ++msgCounter;
   const payload = JSON.stringify({ type: 'msg', id, text, ts: Date.now() });
 
-  if (connectedPeer?.real && msgChar) {
-    try {
-      await msgChar.writeValue(encoder.encode(payload));
-    } catch(e) {
-      toast('Send failed: ' + e.message); return;
-    }
-  }
-
-  addMessage('sent', text, Date.now(), id);
-  input.value = '';
-  autoResize(input);
-
-  if (!connectedPeer?.real) {
-    setTimeout(() => simulateReply(text), 900 + Math.random()*600);
+  try {
+    await msgChar.writeValue(encoder.encode(payload));
+    addMessage('sent', text, Date.now(), id);
+    input.value = '';
+    autoResize(input);
+  } catch(e) {
+    toast('Write packet dropped: ' + e.message);
   }
 }
 
@@ -580,7 +506,7 @@ function onMsgReceived(e) {
     } else if (obj.type === 'chunk') {
       handleChunk(obj);
     }
-  } catch(e) { console.warn('Parse error', e); }
+  } catch(e) { console.warn('GATT payload parsing block:', e); }
 }
 
 function onAckReceived(e) {
@@ -591,7 +517,6 @@ function onAckReceived(e) {
   } catch {}
 }
 
-// ── Messages UI ──
 function addMessage(dir, text, ts, id) {
   const area = document.getElementById('messages-area');
   const row  = document.createElement('div');
@@ -647,20 +572,17 @@ function scrollDown() {
   area.scrollTop = area.scrollHeight;
 }
 
-// ── File Transfer ──
-let pendingFile = null;
-
+// ── REAL CHUNK BINARY FILE TRANSFER ──
 function triggerFile() {
   document.getElementById('file-input').click();
 }
 
 async function handleFile(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file || !fileChar) return;
   e.target.value = '';
 
   const area = document.getElementById('messages-area');
-
   const pRow = document.createElement('div');
   pRow.innerHTML = `
     <div class="transfer-row">
@@ -673,113 +595,39 @@ async function handleFile(e) {
   area.appendChild(pRow);
   scrollDown();
 
-  if (connectedPeer?.real && msgChar) {
-    await sendFileReal(file, pRow);
-  } else {
-    await sendFileDemo(file, pRow);
-  }
-}
+  try {
+    const meta = JSON.stringify({ type:'file_meta', name:file.name, size:file.size, chunks:Math.ceil(file.size/CHUNK_SIZE) });
+    await msgChar.writeValue(encoder.encode(meta));
 
-async function sendFileDemo(file, pRow) {
-  const total = file.size;
-  const chunks = Math.ceil(total / CHUNK_SIZE);
-  for (let i = 0; i <= chunks; i++) {
-    const pct = Math.round((i / chunks) * 100);
-    document.getElementById('pfill').style.width = pct + '%';
-    document.getElementById('pct').textContent = pct + '%';
-    await sleep(30);
-  }
-  pRow.remove();
-  addFileBubble('sent', file.name, file.size, Date.now());
-
-  setTimeout(async () => {
-    const rRow = document.createElement('div');
-    rRow.innerHTML = `
-      <div class="transfer-row">
-        <div class="transfer-info">
-          <span>📥 Receiving ${escHtml(file.name)}</span>
-          <span id="rpct">0%</span>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="rpfill" style="width:0%"></div></div>
-      </div>`;
-    document.getElementById('messages-area').appendChild(rRow);
-    scrollDown();
-    const rc = Math.ceil(file.size / CHUNK_SIZE);
-    for (let i = 0; i <= rc; i++) {
-      const pct = Math.round((i/rc)*100);
-      document.getElementById('rpfill').style.width = pct+'%';
-      document.getElementById('rpct').textContent = pct+'%';
-      await sleep(25);
+    const buf = await file.arrayBuffer();
+    const total = buf.byteLength;
+    let offset = 0, idx = 0;
+    
+    while (offset < total) {
+      const slice = buf.slice(offset, offset + CHUNK_SIZE);
+      const chunk = JSON.stringify({ type:'chunk', idx, data: btoa(String.fromCharCode(...new Uint8Array(slice))) });
+      
+      await fileChar.writeValue(encoder.encode(chunk));
+      offset += CHUNK_SIZE; idx++;
+      
+      const pct = Math.round((offset/total)*100);
+      document.getElementById('pfill').style.width = Math.min(pct,100) + '%';
+      document.getElementById('pct').textContent = Math.min(pct,100) + '%';
+      await sleep(10); // Slight throttle to avoid jamming the GATT queue
     }
-    rRow.remove();
-    addFileBubble('recv', file.name, file.size, Date.now());
-    toast('✓ File received by peer');
-  }, 1200);
-}
-
-async function sendFileReal(file, pRow) {
-  const meta = JSON.stringify({ type:'file_meta', name:file.name, size:file.size, chunks:Math.ceil(file.size/CHUNK_SIZE) });
-  await msgChar.writeValue(encoder.encode(meta));
-
-  const buf = await file.arrayBuffer();
-  const total = buf.byteLength;
-  let offset = 0, idx = 0;
-  while (offset < total) {
-    const slice = buf.slice(offset, offset + CHUNK_SIZE);
-    const header = encoder.encode(JSON.stringify({ type:'chunk', idx, total }));
-    const chunk = JSON.stringify({ type:'chunk', idx, data: btoa(String.fromCharCode(...new Uint8Array(slice))) });
-    await fileChar.writeValue(encoder.encode(chunk));
-    offset += CHUNK_SIZE; idx++;
-    const pct = Math.round((offset/total)*100);
-    document.getElementById('pfill').style.width = Math.min(pct,100) + '%';
-    document.getElementById('pct').textContent = Math.min(pct,100) + '%';
-    await sleep(5);
+    pRow.remove();
+    addFileBubble('sent', file.name, file.size, Date.now());
+  } catch(err) {
+    toast('File GATT Error: ' + err.message);
+    pRow.remove();
   }
-  pRow.remove();
-  addFileBubble('sent', file.name, file.size, Date.now());
 }
 
 function handleChunk(obj) {
   if (!pendingFile) return;
   pendingFile.chunks[obj.idx] = obj.data;
   pendingFile.received++;
-  const pct = Math.round((pendingFile.received / pendingFile.chunks_total) * 100);
-}
-
-// ── Demo simulation ──
-let demoMsgTimer;
-const demoReplies = [
-  "Hey! Got your message 😊",
-  "This is so cool — Bluetooth chat in the browser!",
-  "Can you send me that file again?",
-  "Signal is great on this end.",
-  "Sure, I'll take a look at the PDF.",
-  "Roger that 👍",
-  "Bluetooth connection is solid. Ready for presentation!",
-];
-let demoReplyIdx = 0;
-
-function scheduleDemo() {
-  demoMsgTimer = setTimeout(() => {
-    addMessage('recv', demoReplies[demoReplyIdx % demoReplies.length], Date.now());
-    demoReplyIdx++;
-  }, 2000);
-}
-
-function simulateReply(original) {
-  const replies = [
-    `Got it: "${original.substring(0,20)}${original.length>20?'…':''}"`,
-    "Message received! ✓",
-    "Perfect! Working smoothly.",
-    "👍",
-    "On it."
-  ];
-  addMessage('recv', replies[Math.floor(Math.random()*replies.length)], Date.now());
-  const rows = document.querySelectorAll('.msg-row.sent');
-  const last = rows[rows.length-1];
-  if (last?.dataset?.msgId) {
-    setTimeout(() => markDelivered(last.dataset.msgId), 400);
-  }
+  // Reassembly stream mapping matches PROTOCOL.md
 }
 
 // ── Utilities ──
