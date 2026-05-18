@@ -9,7 +9,7 @@ The application enables seamless local node discovery, structured packet deliver
 ## 🚀 Live Demo
 
 You can test the deployment instantly via GitHub Pages:
-👉 **[https://dushantraja0.github.io/bluetooth-chat/](https://dushantraja0.github.io/bluetooth-chat/)**
+👉 **https://dushantraja0.github.io/szabist-connect/**
 
 ---
 
