@@ -3,469 +3,462 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SZABIST Connect — BLE Messenger</title>
+<title>SZABIST Connect — Enterprise P2P Client</title>
 <style>
   :root {
-    --bg: #0b0f19;
-    --bg2: #111827;
-    --bg3: #1f2937;
-    --bg4: #374151;
-    --accent: #2563eb;
-    --accent2: #1d4ed8;
-    --sent-bg: linear-gradient(135deg, #2563eb, #1d4ed8);
-    --recv-bg: #1f2937;
-    --text: #f9fafb;
-    --text2: #9ca3af;
-    --text3: #4b5563;
-    --border: rgba(255, 255, 255, 0.06);
+    --sidebar-bg: #090d16;
+    --main-bg: #0f172a;
+    --panel-bg: rgba(30, 41, 59, 0.45);
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.35);
     --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --radius: 24px;
-    --radius-sm: 14px;
-    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --success-glow: rgba(16, 185, 129, 0.25);
+    --danger: #f43f5e;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.06);
+    --radius-lg: 16px;
+    --radius-md: 12px;
   }
-  
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: radial-gradient(circle at top right, #1e1b4b, #0b0f19 70%);
-    color: var(--text);
+    background-color: var(--main-bg);
+    background-image: radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 40%),
+                      radial-gradient(circle at 100% 100%, #0f172a 0%, #020617 100%);
+    color: var(--text-main);
     height: 100vh;
-    overflow: hidden;
     display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* ── CONTAINER ── */
-  .screen { 
-    display: none; 
-    flex-direction: column; 
-    width: 100%;
-    max-width: 480px;
-    height: 92vh; 
-    background: rgba(17, 24, 39, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
     overflow: hidden;
-    animation: fadeIn 0.4s ease-out;
-  }
-  .screen.active { display: flex; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
   }
 
-  /* ── TOP BARS ── */
-  .topbar, .chat-topbar {
-    background: rgba(17, 24, 39, 0.6);
-    border-bottom: 1px solid var(--border);
-    padding: 18px 24px;
+  /* ── SIDEBAR SYSTEM ── */
+  .sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    padding: 24px;
+    justify-content: space-between;
     flex-shrink: 0;
   }
-  .topbar-logo {
+  .brand-zone .logo {
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #3b82f6, #10b981);
+    background: linear-gradient(135deg, #60a5fa, #34d399);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
   }
-  .topbar-subtitle { 
-    font-size: 11px; 
-    color: var(--text2); 
+  .brand-zone .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
   }
-  .status-pill {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(31, 41, 55, 0.6); border: 1px solid var(--border);
-    border-radius: 30px; padding: 6px 14px;
-    font-size: 12px; font-weight: 600; color: var(--text);
-    margin-left: auto;
+  .nav-menu { margin-top: 40px; display: flex; flex-direction: column; gap: 8px; }
+  .nav-item {
+    padding: 12px 16px; border-radius: var(--radius-md);
+    color: var(--text-muted); font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s;
   }
-  .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--text3);
-    transition: all 0.3s ease;
-  }
-  .status-dot.connected { background: var(--success); box-shadow: 0 0 10px var(--success); }
-  .status-dot.scanning { background: var(--warning); box-shadow: 0 0 10px var(--warning); animation: pulse 1.2s infinite; }
-  .status-dot.disconnected { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-  /* ── DEVICES SCREEN ── */
-  .devices-body { flex: 1; overflow-y: auto; padding: 24px; }
-  .scan-btn {
-    width: 100%; padding: 16px;
-    background: linear-gradient(135deg, #2563eb, #4f46e5);
-    border: none; border-radius: var(--radius-sm);
-    color: #fff; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    margin-bottom: 24px;
-  }
-  .scan-btn:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-  }
-  .scan-btn:active { transform: translateY(0); }
-  .section-label {
-    font-size: 12px; font-weight: 700; color: var(--text2);
-    text-transform: uppercase; letter-spacing: 1.5px;
-    margin-bottom: 14px;
-  }
-  .device-list { display: flex; flex-direction: column; gap: 10px; }
-  .device-card {
-    background: rgba(31, 41, 55, 0.4); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 16px;
-    display: flex; align-items: center; gap: 16px;
-    cursor: pointer; transition: all 0.25s ease;
-  }
-  .device-card:hover { 
-    background: rgba(31, 41, 55, 0.8); border-color: var(--accent);
-    transform: scale(1.02);
-  }
-  .device-icon {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: linear-gradient(135deg, #1e40af, #4338ca);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
-  }
-  .device-info { flex: 1; min-width: 0; }
-  .device-name { font-size: 15px; font-weight: 600; color: var(--text); }
-  .device-addr { font-size: 12px; color: var(--text2); font-family: monospace; margin-top: 2px; }
-  .device-signal { font-size: 12px; color: var(--success); font-weight: 500; margin-left: auto; }
+  .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); }
+  .nav-item:hover:not(.active) { background: rgba(255,255,255,0.02); color: var(--text-main); }
   
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .system-status {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 16px;
+  }
+  .status-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  .status-tag { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .status-dot.scanning { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1.2s infinite; }
+  .status-dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* ── BANNERS ── */
-  .ble-info {
-    border-radius: var(--radius-sm); padding: 14px 18px;
-    margin-bottom: 20px; font-size: 13px; line-height: 1.6;
-    background: rgba(37, 99, 235, 0.06); border: 1px solid rgba(37, 99, 235, 0.2);
-    color: #93c5fd;
-  }
-
-  /* ── CHAT SCREEN ── */
-  .back-btn {
-    background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text);
-    padding: 8px 14px; border-radius: 30px; cursor: pointer; font-size: 13px;
-    transition: all 0.2s;
-  }
-  .back-btn:hover { background: rgba(255, 255, 255, 0.1); }
-  .peer-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, #4f46e5, #06b6d4);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 14px; flex-shrink: 0;
-  }
-  .peer-info { flex: 1; min-width: 0; }
-  .peer-name { font-size: 15px; font-weight: 600; }
-  .peer-status { font-size: 12px; color: var(--success); }
-  .conn-badge {
-    background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
-    color: var(--success); border-radius: 20px; padding: 4px 10px;
-    font-size: 11px; font-weight: 600;
+  /* ── MAIN CONTENT LAYER ── */
+  .main-workspace {
+    flex: 1;
+    display: flex;
+    padding: 24px;
+    position: relative;
   }
 
-  /* ── MESSAGES INTERFACE ── */
-  .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .msg-row { display: flex; flex-direction: column; }
-  .msg-row.sent { align-items: flex-end; }
-  .msg-row.recv { align-items: flex-start; }
-  .msg-bubble {
-    max-width: 75%; padding: 12px 16px;
-    border-radius: 20px; font-size: 15px; line-height: 1.5;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  .view-panel {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   }
-  .msg-row.sent .msg-bubble {
-    background: var(--sent-bg); color: #fff;
-    border-bottom-right-radius: 4px;
-  }
-  .msg-row.recv .msg-bubble {
-    background: var(--recv-bg); color: var(--text);
-    border-bottom-left-radius: 4px; border: 1px solid var(--border);
-  }
-  .msg-meta {
-    font-size: 10px; color: var(--text2); margin-top: 4px;
-    padding: 0 6px; display: flex; align-items: center; gap: 4px;
-  }
-  .msg-row.sent .msg-meta { flex-direction: row-reverse; }
-  .receipt-icon { font-size: 12px; color: var(--text3); }
-  .receipt-icon.delivered { color: var(--success); }
+  .view-panel.active { display: flex; }
 
-  /* File components */
-  .file-bubble {
-    background: rgba(31, 41, 55, 0.6); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px 16px;
-    display: flex; align-items: center; gap: 12px; max-width: 280px;
+  /* ── DISCOVERY CONTAINER ── */
+  .panel-header {
+    padding: 24px; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between;
   }
-  .msg-row.sent .file-bubble { background: rgba(37, 99, 235, 0.15); border-color: rgba(37, 99, 235, 0.3); }
-  .file-icon-box {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: var(--bg4); display: flex; align-items: center;
-    justify-content: center; font-size: 20px; flex-shrink: 0;
-  }
-  .file-name { font-size: 13px; font-weight: 600; word-break: break-all; margin-bottom: 2px; }
-  .file-size { font-size: 11px; color: var(--text2); }
-
-  /* Progress rows */
-  .transfer-row {
-    background: rgba(31, 41, 55, 0.6); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; width: 100%; max-width: 280px;
-  }
-  .transfer-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 8px; }
-  .progress-track { height: 6px; background: #111827; border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 3px; transition: width 0.2s; }
-
-  .sys-msg { text-align: center; font-size: 12px; color: var(--text3); padding: 8px 0; }
-
-  /* ── INPUT CONTROL BAR ── */
-  .input-bar {
-    background: rgba(17, 24, 39, 0.8); border-top: 1px solid var(--border);
-    padding: 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  }
-  .attach-btn, .send-btn {
-    width: 42px; height: 42px; border-radius: 50%; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0;
-  }
-  .attach-btn { background: rgba(255,255,255,0.05); color: var(--text); font-size: 18px; }
-  .attach-btn:hover { background: rgba(255,255,255,0.1); transform: rotate(15deg); }
+  .panel-title { font-size: 18px; font-weight: 600; }
   
-  .send-btn { background: var(--accent); color: #fff; font-size: 16px; }
-  .send-btn:hover { transform: scale(1.08); background: var(--accent2); }
-  .send-btn:disabled { background: var(--bg4); color: var(--text3); transform: none; cursor: not-allowed; }
-  
-  .msg-input {
-    flex: 1; background: rgba(31, 41, 55, 0.5); border: 1px solid var(--border);
-    border-radius: 24px; padding: 12px 18px; color: var(--text); font-size: 14px;
-    outline: none; resize: none; max-height: 100px; min-height: 42px; line-height: 1.4;
-    transition: all 0.2s ease; font-family: inherit;
+  .scan-control-btn {
+    padding: 10px 20px; background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s; box-shadow: 0 4px 12px var(--accent-glow);
   }
-  .msg-input:focus { border-color: var(--accent); background: rgba(31, 41, 55, 0.8); }
+  .scan-control-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5); }
+
+  .discovery-grid {
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; align-content: start;
+  }
+
+  .node-card {
+    background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 20px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 12px; position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .node-card:hover {
+    background: rgba(255, 255, 255, 0.04); border-color: var(--accent);
+    transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .node-meta { display: flex; align-items: center; gap: 12px; }
+  .node-avatar {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+  }
+  .node-details { flex: 1; min-width: 0; }
+  .node-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node-mac { font-size: 11px; color: var(--text-muted); font-family: monospace; margin-top: 2px; }
+  .node-footer { display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-top: 4px; }
+  .signal-badge { background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+  .empty-layout {
+    grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-muted);
+  }
+  .empty-layout .icon { font-size: 40px; opacity: 0.2; margin-bottom: 12px; }
+
+  /* ── PREMIUM CHAT HOOKS ── */
+  .chat-header-actions { display: flex; align-items: center; gap: 12px; }
+  .disconnect-btn {
+    padding: 8px 14px; background: rgba(244, 63, 94, 0.1); color: var(--danger);
+    border: 1px solid rgba(244, 63, 94, 0.2); border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .disconnect-btn:hover { background: rgba(244, 63, 94, 0.2); }
+
+  .chat-messages-container {
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    background: rgba(2, 6, 17, 0.2);
+  }
+  .system-node-msg { text-align: center; font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+  
+  .message-wrapper { display: flex; flex-direction: column; width: 100%; }
+  .message-wrapper.sent { align-items: flex-end; }
+  .message-wrapper.recv { align-items: flex-start; }
+  
+  .bubble-text {
+    padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.5; max-width: 65%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  .message-wrapper.sent .bubble-text {
+    background: var(--accent); color: white; border-bottom-right-radius: 2px;
+  }
+  .message-wrapper.recv .bubble-text {
+    background: rgba(51, 65, 85, 0.5); color: var(--text-main); border-bottom-left-radius: 2px;
+    border: 1px solid var(--border-color);
+  }
+  .bubble-info { font-size: 10px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .message-wrapper.sent .bubble-info { flex-direction: row-reverse; }
+  .ack-tick { color: var(--text-muted); }
+  .ack-tick.delivered { color: var(--success); }
+
+  /* File Bubble Components */
+  .bubble-file-card {
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px; max-width: 320px;
+  }
+  .message-wrapper.sent .bubble-file-card { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.1); }
+  .file-avatar-box {
+    width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .file-name-string { font-size: 13px; font-weight: 600; margin-bottom: 2px; word-break: break-all; }
+  .file-size-string { font-size: 11px; color: var(--text-muted); }
+
+  /* Progress Panels */
+  .upload-progress-card {
+    background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 14px; width: 300px; margin: 8px 0;
+  }
+  .progress-header-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .progress-line-track { height: 4px; background: #020617; border-radius: 2px; overflow: hidden; }
+  .progress-line-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); width: 0%; transition: width 0.15s; }
+
+  /* ── CONSOLE CONTROLS BAR ── */
+  .console-bar {
+    padding: 20px 24px; border-top: 1px solid var(--border-color);
+    display: flex; align-items: center; gap: 14px; background: rgba(15, 23, 42, 0.4);
+  }
+  .console-btn {
+    width: 40px; height: 40px; border-radius: var(--radius-md); border: none;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+    color: var(--text-main); font-size: 16px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .console-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--text-muted); }
+  .console-input-area {
+    flex: 1; background: rgba(2, 6, 17, 0.4); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); padding: 11px 16px; color: var(--text-main); font-size: 14px;
+    outline: none; resize: none; min-height: 40px; max-height: 120px; line-height: 1.4; transition: all 0.2s;
+  }
+  .console-input-area:focus { border-color: var(--accent); background: rgba(2, 6, 17, 0.6); }
+  .console-send-btn {
+    padding: 0 18px; height: 40px; border-radius: var(--radius-md); border: none;
+    background: var(--accent); color: white; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px var(--accent-glow);
+  }
+  .console-send-btn:hover { transform: scale(1.02); }
   #file-input { display: none; }
 
-  #toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: rgba(31, 41, 55, 0.95); border: 1px solid var(--accent);
-    backdrop-filter: blur(10px); box-shadow: var(--shadow);
-    border-radius: 30px; padding: 10px 22px; font-size: 13px; color: var(--text);
-    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 999;
+  #toast-alert {
+    position: fixed; bottom: 40px; right: 40px; background: #1e293b;
+    border-left: 4px solid var(--accent); padding: 12px 24px; border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000;
   }
-  #toast.show { opacity: 1; }
+  #toast-alert.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<div class="screen active" id="devices-screen">
-  <div class="topbar">
-    <div>
-      <div class="topbar-logo">SZABIST Connect</div>
-      <div class="topbar-subtitle">P2P Bluetooth Network Layer</div>
-    </div>
-    <div class="status-pill" id="status-pill">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text">Ready</span>
+<div class="sidebar">
+  <div class="brand-zone">
+    <div class="logo">SZABIST Connect</div>
+    <div class="subtitle">P2P BLE Framework</div>
+    
+    <div class="nav-menu">
+      <div class="nav-item active">📡 Peripheral Nodes</div>
+      <div class="nav-item">📚 CNDC Project</div>
+      <div class="nav-item">⚙️ GATT Terminal</div>
     </div>
   </div>
 
-  <div class="devices-body">
-    <div class="ble-info">
-      <strong>SZABIST Smart Local Node Discovery</strong><br>
-      Scanning system communicates over secure Bluetooth channels. Select an active peer below to instantiate GATT connection.
-    </div>
-
-    <button class="scan-btn" id="scan-btn" onclick="startScan()">
-      <span id="scan-icon">📡</span>
-      <span id="scan-label">Scan for Devices</span>
-    </button>
-
-    <div class="section-label" id="list-label">Discovered Nodes</div>
-    <div class="device-list" id="device-list">
-      <div class="empty-state" id="empty-state">
-        <div class="icon">💻</div>
-        <p>No active peer nodes found yet.<br>Click Scan to populate SZABIST local network.</p>
+  <div class="system-status">
+    <div class="status-row">
+      <span style="color: var(--text-muted);">Client Link</span>
+      <div class="status-tag">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Ready</span>
       </div>
     </div>
   </div>
 </div>
 
-<div class="screen" id="chat-screen">
-  <div class="chat-topbar">
-    <button class="back-btn" onclick="goBack()">← Disconnect</button>
-    <div class="peer-avatar" id="peer-avatar">?</div>
-    <div class="peer-info">
-      <div class="peer-name" id="peer-name">Device</div>
-      <div class="peer-status" id="peer-status">Connected</div>
+<div class="main-workspace">
+
+  <div class="view-panel active" id="discovery-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">BLE Node Discovery</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Local cluster synchronization matrix</div>
+      </div>
+      <button class="scan-control-btn" id="scan-btn" onclick="startScan()">
+        <span id="scan-icon">📡</span>
+        <span id="scan-label">Scan Cluster</span>
+      </button>
     </div>
-    <div class="conn-badge" id="conn-badge">🔵 BLE Live</div>
+
+    <div class="discovery-grid" id="device-list">
+      <div class="empty-layout" id="empty-state">
+        <div class="icon">🔍</div>
+        <p>GATT discovery channel uninitialized.<br>Trigger scan operation to map nearby class nodes.</p>
+      </div>
+    </div>
   </div>
 
-  <div class="messages-area" id="messages-area">
-    <div class="sys-msg">🔒 End-to-end encrypted over Bluetooth GATT</div>
+  <div class="view-panel" id="chat-panel">
+    <div class="panel-header">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="node-avatar" id="peer-avatar" style="background: linear-gradient(135deg, #059669, #10b981);">??</div>
+        <div>
+          <div class="panel-title" id="peer-name">Node Frame</div>
+          <div style="font-size: 12px; color: var(--success); margin-top: 2px;" id="peer-link-status">GATT Channel Bound</div>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="disconnect-btn" onclick="goBack()">Disconnect Session</button>
+      </div>
+    </div>
+
+    <div class="chat-messages-container" id="messages-area">
+      <div class="system-node-msg">🔒 Symmetric Frame Layer Secured via BLE Transport Protocol</div>
+    </div>
+
+    <div class="console-bar">
+      <button class="console-btn" onclick="triggerFile()" title="Inject Binary Frame">📎</button>
+      <textarea class="console-input-area" id="msg-input" rows="1"
+        placeholder="Type a protocol sequence message…"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"></textarea>
+      <button class="console-send-btn" onclick="sendText()">Transmit</button>
+    </div>
+    <input type="file" id="file-input" onchange="handleFile(event)">
   </div>
 
-  <div class="input-bar">
-    <button class="attach-btn" onclick="triggerFile()" title="Attach file">📎</button>
-    <textarea class="msg-input" id="msg-input" rows="1"
-      placeholder="Message…"
-      onkeydown="handleKey(event)"
-      oninput="autoResize(this)"></textarea>
-    <button class="send-btn" id="send-btn" onclick="sendText()">➤</button>
-  </div>
-  <input type="file" id="file-input" onchange="handleFile(event)">
 </div>
 
-<div id="toast"></div>
+<div id="toast-alert"></div>
 
 <script>
-// ── BLE Simulated Constants ──
-const SERVICE_UUID      = '12345678-1234-1234-1234-123456789abc';
-const CHUNK_SIZE        = 512; 
-
-// ── Shared App State ──
+const CHUNK_SIZE = 512; 
 let isScanning = false;
 let connectedPeer = null;
 let msgCounter = 0;
-let demoInterval = null;
-let demoMsgTimer = null;
+let scanTimer = null;
+let msgTimer = null;
 
-// Sahi Aur Exact Names Setup
 const SIM_DEVICES = [
   { id: 'sim-1', name: "Dushant Raja", addr: 'B8:27:EB:AA:01:FF', signal: '-50 dBm' },
   { id: 'sim-2', name: 'Rana Ali Azam', addr: 'C4:4F:33:11:CC:DD', signal: '-62 dBm' },
   { id: 'sim-3', name: 'Mahad Naqvi', addr: 'F2:8A:88:BC:99:11', signal: '-68 dBm' }
 ];
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+function togglePanels(showChat) {
+  if(showChat) {
+    document.getElementById('discovery-panel').classList.remove('active');
+    document.getElementById('chat-panel').classList.add('active');
+  } else {
+    document.getElementById('chat-panel').classList.remove('active');
+    document.getElementById('discovery-panel').classList.add('active');
+  }
 }
 
-function setStatus(state, label) {
-  const dot  = document.getElementById('status-dot');
-  const text = document.getElementById('status-text');
+function setSystemStatus(state, label) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
   dot.className = 'status-dot ' + state;
-  text.textContent = label;
+  txt.textContent = label;
 }
 
-function toast(msg, dur=2200) {
-  const t = document.getElementById('toast');
+function triggerToast(msg) {
+  const t = document.getElementById('toast-alert');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), dur);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// ── SCANNING LOGIC ──
+// ── DISCOVERY ENGINE ──
 function startScan() {
   if (isScanning) { stopScan(); return; }
 
   isScanning = true;
-  document.getElementById('scan-label').textContent = 'Stop Scanning';
+  document.getElementById('scan-label').textContent = 'Halt Scanner';
   document.getElementById('scan-icon').textContent  = '⏹';
-  document.getElementById('scan-btn').style.background = '#ef4444';
-  setStatus('scanning', 'Scanning…');
+  document.getElementById('scan-btn').style.background = var(--danger);
+  setSystemStatus('scanning', 'Scanning');
 
   if(document.getElementById('empty-state')) document.getElementById('empty-state').style.display = 'none';
   document.getElementById('device-list').innerHTML = '';
 
   let idx = 0;
-  demoInterval = setInterval(() => {
+  scanTimer = setInterval(() => {
     if (idx < SIM_DEVICES.length) {
-      addDeviceCard(SIM_DEVICES[idx].name, SIM_DEVICES[idx].addr, SIM_DEVICES[idx].signal, SIM_DEVICES[idx].id);
+      appendNodeCard(SIM_DEVICES[idx].name, SIM_DEVICES[idx].addr, SIM_DEVICES[idx].signal, SIM_DEVICES[idx].id);
       idx++;
     } else {
       stopScan();
     }
-  }, 600);
+  }, 500);
 }
 
 function stopScan() {
-  clearInterval(demoInterval);
+  clearInterval(scanTimer);
   isScanning = false;
-  document.getElementById('scan-label').textContent = 'Scan for Devices';
+  document.getElementById('scan-label').textContent = 'Scan Cluster';
   document.getElementById('scan-icon').textContent  = '📡';
   document.getElementById('scan-btn').style.background = '';
-  setStatus('', 'Ready');
+  setSystemStatus('', 'Ready');
 }
 
-function addDeviceCard(name, addr, signal, id) {
-  const list = document.getElementById('device-list');
-  const initials = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() || '??';
+function appendNodeCard(name, addr, signal, id) {
+  const grid = document.getElementById('device-list');
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase();
   const card = document.createElement('div');
-  card.className = 'device-card';
+  card.className = 'node-card';
   card.innerHTML = `
-    <div class="device-icon">${initials}</div>
-    <div class="device-info">
-      <div class="device-name">${name}</div>
-      <div class="device-addr">${addr}</div>
+    <div class="node-meta">
+      <div class="node-avatar">${initials}</div>
+      <div class="node-details">
+        <div class="node-name">${name}</div>
+        <div class="node-mac">${addr}</div>
+      </div>
     </div>
-    <div class="device-signal">${signal}</div>`;
-  card.onclick = () => connectTo(name, addr);
-  list.appendChild(card);
+    <div class="node-footer">
+      <span style="color: var(--text-muted);">BLE Stream Channel</span>
+      <span class="signal-badge">${signal}</span>
+    </div>`;
+  card.onclick = () => bindPeerLink(name, addr);
+  grid.appendChild(card);
 }
 
-// ── CONNECTION PIPELINE ──
-function connectTo(name, addr) {
-  setStatus('scanning', 'Connecting…');
+// ── GATT CONNECTION BINDING ──
+function bindPeerLink(name, addr) {
+  setSystemStatus('scanning', 'Binding');
+  triggerToast(`Attaching connection handle to ${name}`);
   
   setTimeout(() => {
     connectedPeer = { name, addr };
-    openChat(name);
-    setStatus('connected', 'Connected');
-    scheduleIncomingReplies(name);
-  }, 1000);
-}
-
-function openChat(name) {
-  document.getElementById('peer-name').textContent = name;
-  document.getElementById('peer-status').textContent = 'GATT Status: MTU 512 Link Active';
-  const av = document.getElementById('peer-avatar');
-  av.textContent = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() || '?';
-  showScreen('chat-screen');
-  addSysMsg(`Encrypted connection established with ${name}`);
+    document.getElementById('peer-name').textContent = name;
+    document.getElementById('peer-avatar').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase();
+    togglePanels(true);
+    setSystemStatus('connected', 'Connected');
+    appendSystemLog(`GATT Channel successfully synchronized with local host: ${name}`);
+    
+    msgTimer = setTimeout(() => {
+      appendMessageBlock('recv', `Network initialization handshake complete. Node stream verified.`, Date.now());
+    }, 2000);
+  }, 800);
 }
 
 function goBack() {
-  clearTimeout(demoMsgTimer);
+  clearTimeout(msgTimer);
   connectedPeer = null;
-  showScreen('devices-screen');
-  setStatus('', 'Ready');
-  if(document.getElementById('device-list')) document.getElementById('device-list').innerHTML = '';
+  togglePanels(false);
+  setSystemStatus('', 'Ready');
+  document.getElementById('device-list').innerHTML = `
+    <div class="empty-layout" id="empty-state">
+      <div class="icon">🔍</div>
+      <p>GATT discovery channel uninitialized.<br>Trigger scan operation to map nearby class nodes.</p>
+    </div>`;
 }
 
-// ── MESSAGING ARCHITECTURE ──
+// ── CONSOLE TRANSMISSION ENGINE ──
 function sendText() {
   const input = document.getElementById('msg-input');
   const text  = input.value.trim();
   if (!text) return;
 
   const id = ++msgCounter;
-  addMessage('sent', text, Date.now(), id);
+  appendMessageBlock('sent', text, Date.now(), id);
   input.value = '';
   autoResize(input);
 
-  setTimeout(() => {
-    markDelivered(id);
-  }, 600);
-
-  setTimeout(() => {
-    triggerPeerReply(text);
-  }, 1500);
+  setTimeout(() => triggerAckReceipt(id), 500);
+  setTimeout(() => triggerSimulatedResponse(text), 1500);
 }
 
 function handleKey(e) {
@@ -474,142 +467,114 @@ function handleKey(e) {
 
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-function addMessage(dir, text, ts, id) {
-  const area = document.getElementById('messages-area');
-  const row  = document.createElement('div');
-  row.className = `msg-row ${dir}`;
-  if (id) row.dataset.msgId = id;
+function appendMessageBlock(direction, content, timestamp, id) {
+  const zone = document.getElementById('messages-area');
+  const wrap = document.createElement('div');
+  wrap.className = `message-wrapper ${direction}`;
+  if (id) wrap.dataset.frameId = id;
 
-  const timeStr = new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  const receipt = dir === 'sent' ? `<span class="receipt-icon" id="r-${id}">✓</span>` : '';
+  const timeStr = new Date(timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const indicator = direction === 'sent' ? `<span class="ack-tick" id="tick-${id}">✓</span>` : '';
 
-  row.innerHTML = `
-    <div class="msg-bubble">${escHtml(text)}</div>
-    <div class="msg-meta">${receipt}<span>${timeStr}</span></div>`;
-  area.appendChild(row);
-  scrollDown();
+  wrap.innerHTML = `
+    <div class="bubble-text">${escapeMarkup(content)}</div>
+    <div class="bubble-info">${indicator}<span>${timeStr}</span></div>`;
+  zone.appendChild(wrap);
+  scrollConsoleDown();
 }
 
-function markDelivered(id) {
-  const el = document.getElementById(`r-${id}`);
+function triggerAckReceipt(id) {
+  const el = document.getElementById(`tick-${id}`);
   if (el) { el.textContent = '✓✓'; el.classList.add('delivered'); }
 }
 
-// ── INTERACTIVE CONVERSATION REPLIES ──
-const responsePool = [
-  "Perfect! Signal metrics look excellent on this node. 👍",
-  "Acknowledged. Connection payload received over custom channel.",
-  "Web Bluetooth pipeline matches our byte structured design document!",
-  "Great presentation flow! Let's check the binary data packet transfer next.",
-  "Roger that, chat buffers working perfectly."
-];
-let poolIdx = 0;
-
-function scheduleIncomingReplies(name) {
-  demoMsgTimer = setTimeout(() => {
-    addMessage('recv', `Hello! This is ${name}. SZABIST Connect node is fully initialized.`, Date.now());
-  }, 2500);
+function triggerSimulatedResponse(input) {
+  const answers = [
+    "Payload processed. Byte framing bounds align with PROTOCOL.md. 👍",
+    "GATT cache updated. Execution values logging perfectly.",
+    "Data segment synchronized across local radio registers.",
+    "Simulated frame buffers are active. Proceed with binary stream verification."
+  ];
+  const choice = answers[Math.floor(Math.random() * answers.length)];
+  appendMessageBlock('recv', choice, Date.now());
 }
 
-function triggerPeerReply(userText) {
-  let reply = "";
-  if (userText.toLowerCase().includes('hi') || userText.toLowerCase().includes('hello')) {
-    reply = "Hey there! Connection layer is perfectly working.";
-  } else {
-    reply = responsePool[poolIdx % responsePool.length];
-    poolIdx++;
-  }
-  addMessage('recv', reply, Date.now());
-}
-
-// ── BINARY FILE SIMULATION ──
-function triggerFile() {
-  document.getElementById('file-input').click();
-}
+// ── BINARY DATA STREAM ENGINE ──
+function triggerFile() { document.getElementById('file-input').click(); }
 
 async function handleFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   e.target.value = '';
 
-  const area = document.getElementById('messages-area');
-  const pRow = document.createElement('div');
-  pRow.innerHTML = `
-    <div class="transfer-row">
-      <div class="transfer-info">
-        <span>📤 Chunking &amp; Sending: ${escHtml(file.name)}</span>
-        <span id="pct">0%</span>
+  const zone = document.getElementById('messages-area');
+  const prog = document.createElement('div');
+  prog.innerHTML = `
+    <div class="upload-progress-card">
+      <div class="progress-header-text">
+        <span>📦 Encapsulating: ${escapeMarkup(file.name)}</span>
+        <span id="pct-label">0%</span>
       </div>
-      <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+      <div class="progress-line-track"><div class="progress-line-fill" id="p-fill"></div></div>
     </div>`;
-  area.appendChild(pRow);
-  scrollDown();
+  zone.appendChild(prog);
+  scrollConsoleDown();
 
-  const chunks = Math.ceil(file.size / CHUNK_SIZE);
-  for (let i = 0; i <= chunks; i++) {
-    const pct = Math.round((i / chunks) * 100);
-    document.getElementById('pfill').style.width = pct + '%';
-    document.getElementById('pct').textContent = pct + '%';
-    await sleep(25); 
+  const slices = Math.ceil(file.size / CHUNK_SIZE);
+  for (let i = 0; i <= slices; i++) {
+    const score = Math.round((i / slices) * 100);
+    document.getElementById('p-fill').style.width = score + '%';
+    document.getElementById('pct-label').textContent = score + '%';
+    await new Promise(r => setTimeout(r, 20)); 
   }
   
-  pRow.remove();
-  addFileBubble('sent', file.name, file.size, Date.now());
-  toast("✓ Byte buffer transferred successfully");
+  prog.remove();
+  appendFileCard('sent', file.name, file.size, Date.now());
+  triggerToast("Frame binary streaming verified.");
 }
 
-function addFileBubble(dir, name, size, ts) {
-  const area = document.getElementById('messages-area');
-  const row  = document.createElement('div');
-  row.className = `msg-row ${dir}`;
-  const icon = getFileIcon(name);
+function appendFileCard(dir, name, size, ts) {
+  const zone = document.getElementById('messages-area');
+  const wrap = document.createElement('div');
+  wrap.className = `message-wrapper ${dir}`;
+  const icon = getExtensionAvatar(name);
   const timeStr = new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  row.innerHTML = `
-    <div class="file-bubble">
-      <div class="file-icon-box">${icon}</div>
+  wrap.innerHTML = `
+    <div class="bubble-file-card">
+      <div class="file-avatar-box">${icon}</div>
       <div>
-        <div class="file-name">${escHtml(name)}</div>
-        <div class="file-size">${fmtSize(size)}</div>
+        <div class="file-name-string">${escapeMarkup(name)}</div>
+        <div class="file-size-string">${formatBytes(size)}</div>
       </div>
     </div>
-    <div class="msg-meta"><span>${timeStr}</span></div>`;
-  area.appendChild(row);
-  scrollDown();
+    <div class="bubble-info"><span>${timeStr}</span></div>`;
+  zone.appendChild(wrap);
+  scrollConsoleDown();
 }
 
-function addSysMsg(text) {
-  const area = document.getElementById('messages-area');
+function appendSystemLog(text) {
+  const zone = document.getElementById('messages-area');
   const d = document.createElement('div');
-  d.className = 'sys-msg';
+  d.className = 'system-node-msg';
   d.textContent = text;
-  area.appendChild(d);
-  scrollDown();
+  zone.appendChild(d);
+  scrollConsoleDown();
 }
 
-function scrollDown() {
-  const area = document.getElementById('messages-area');
-  area.scrollTop = area.scrollHeight;
-}
-
-// ── UTILITY FUNCTIONS ──
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function fmtSize(b) {
+// ── HELPERS ──
+function escapeMarkup(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollConsoleDown() { const a = document.getElementById('messages-area'); a.scrollTop = a.scrollHeight; }
+function formatBytes(b) {
   if (b < 1024) return b + ' B';
   if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
   return (b/(1024*1024)).toFixed(1) + ' MB';
 }
-function getFileIcon(name) {
+function getExtensionAvatar(name) {
   const ext = name.split('.').pop().toLowerCase();
-  const map = { pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', gif:'🖼', webp:'🖼',
-                 mp4:'🎬', mov:'🎬', mp3:'🎵', wav:'🎵',
-                 zip:'🗜', rar:'🗜', docx:'📝', doc:'📝',
-                 xlsx:'📊', xls:'📊', pptx:'📋', txt:'📃' };
+  const map = { pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', zip:'🗜', txt:'📃' };
   return map[ext] || '📁';
 }
 </script>
