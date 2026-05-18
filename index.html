@@ -3,580 +3,538 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SZABIST Connect — Enterprise P2P Client</title>
+<title>SZABIST Connect — BLE Packet Analyzer</title>
 <style>
   :root {
-    --sidebar-bg: #090d16;
-    --main-bg: #0f172a;
-    --panel-bg: rgba(30, 41, 59, 0.45);
-    --accent: #3b82f6;
-    --accent-glow: rgba(59, 130, 246, 0.35);
-    --success: #10b981;
-    --success-glow: rgba(16, 185, 129, 0.25);
-    --danger: #f43f5e;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.06);
-    --radius-lg: 16px;
-    --radius-md: 12px;
+    --bg-main: #06070a;
+    --bg-surface: #0c0f17;
+    --bg-card: #121724;
+    --neon-cyan: #00e5ff;
+    --neon-green: #00ffaa;
+    --neon-orange: #ff9100;
+    --text-primary: #e2e8f0;
+    --text-dim: #64748b;
+    --border-glow: rgba(0, 229, 255, 0.15);
+    --border-solid: #1e293b;
+    --font-mono: 'Courier New', Courier, monospace;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background-color: var(--main-bg);
-    background-image: radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 40%),
-                      radial-gradient(circle at 100% 100%, #0f172a 0%, #020617 100%);
-    color: var(--text-main);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', -apple-system, sans-serif;
     height: 100vh;
     display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 
-  /* ── SIDEBAR SYSTEM ── */
-  .sidebar {
-    width: 280px;
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
+  /* ── SYSTEM TOP RADAR BAR ── */
+  .radar-header {
+    background: var(--bg-surface);
+    border-bottom: 2px solid var(--border-solid);
+    padding: 14px 24px;
     display: flex;
-    flex-direction: column;
-    padding: 24px;
+    align-items: center;
     justify-content: space-between;
-    flex-shrink: 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   }
-  .brand-zone .logo {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #60a5fa, #34d399);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 4px;
-  }
-  .brand-zone .subtitle {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .nav-menu { margin-top: 40px; display: flex; flex-direction: column; gap: 8px; }
-  .nav-item {
-    padding: 12px 16px; border-radius: var(--radius-md);
-    color: var(--text-muted); font-size: 14px; font-weight: 500;
-    display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s;
-  }
-  .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); }
-  .nav-item:hover:not(.active) { background: rgba(255,255,255,0.02); color: var(--text-main); }
-  
-  .system-status {
-    background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 16px;
-  }
-  .status-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
-  .status-tag { display: flex; align-items: center; gap: 6px; font-weight: 600; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
-  .status-dot.scanning { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1.2s infinite; }
-  .status-dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  /* ── MAIN CONTENT LAYER ── */
-  .main-workspace {
-    flex: 1;
+  .system-title {
     display: flex;
-    padding: 24px;
+    align-items: center;
+    gap: 12px;
+  }
+  .matrix-logo {
+    font-family: var(--font-mono);
+    font-weight: 900;
+    font-size: 20px;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+  }
+  .academic-tag {
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .telemetry-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .radar-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: #ef4444;
     position: relative;
   }
+  .radar-dot.active { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+  .radar-dot.scanning { background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); animation: radarPulse 1s infinite alternate; }
+  @keyframes radarPulse { from { opacity: 0.3; } to { opacity: 1; } }
 
-  .view-panel {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    background: var(--panel-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  /* ── SPLIT-SCREEN MATRIX LAYOUT ── */
+  .grid-matrix {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    height: calc(100vh - 55px);
   }
-  .view-panel.active { display: flex; }
 
-  /* ── DISCOVERY CONTAINER ── */
-  .panel-header {
-    padding: 24px; border-bottom: 1px solid var(--border-color);
+  /* ── LEFT PANE: DISCOVERY & SIGNAL MAPPING ── */
+  .matrix-left {
+    background: var(--bg-surface);
+    border-right: 2px solid var(--border-solid);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .control-section {
+    margin-bottom: 24px;
+  }
+  .trigger-scan-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.1);
+  }
+  .trigger-scan-btn:hover {
+    background: var(--neon-cyan);
+    color: var(--bg-main);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+  }
+  .pane-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .node-stream-container {
+    flex: 1; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .tactical-node-card {
+    background: var(--bg-card);
+    border-left: 3px solid var(--text-dim);
+    border-top: 1px solid var(--border-solid);
+    border-right: 1px solid var(--border-solid);
+    border-bottom: 1px solid var(--border-solid);
+    padding: 16px; cursor: pointer; position: relative;
+    transition: all 0.2s ease;
+  }
+  .tactical-node-card:hover {
+    border-left-color: var(--neon-cyan);
+    background: rgba(0, 229, 255, 0.02);
+    transform: translateX(4px);
+  }
+  .tactical-node-card.active-link {
+    border-left-color: var(--neon-green);
+    background: rgba(0, 255, 170, 0.03);
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.05);
+  }
+  .node-header-row {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+  }
+  .node-title-text { font-family: var(--font-mono); font-weight: bold; font-size: 15px; color: var(--text-primary); }
+  .node-hardware-addr { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .node-signal-dbm { font-family: var(--font-mono); font-size: 12px; color: var(--neon-green); font-weight: bold; }
+
+  /* ── RIGHT PANE: REAL-TIME PACKET STREAM ── */
+  .matrix-right {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-main);
+    position: relative;
+  }
+  .no-session-overlay {
+    position: absolute; inset: 0; background: var(--bg-main);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; font-family: var(--font-mono); color: var(--text-dim); gap: 10px;
+  }
+
+  .terminal-stream-header {
+    background: var(--bg-surface); padding: 16px 24px;
+    border-bottom: 1px solid var(--border-solid);
     display: flex; align-items: center; justify-content: space-between;
   }
-  .panel-title { font-size: 18px; font-weight: 600; }
-  
-  .scan-control-btn {
-    padding: 10px 20px; background: var(--accent); color: white;
-    border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 14px;
-    cursor: pointer; display: flex; align-items: center; gap: 8px;
-    transition: all 0.2s; box-shadow: 0 4px 12px var(--accent-glow);
-  }
-  .scan-control-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5); }
+  .active-node-info { font-family: var(--font-mono); font-size: 14px; color: var(--neon-green); }
 
-  .discovery-grid {
+  .packet-logs-area {
     flex: 1; overflow-y: auto; padding: 24px;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; align-content: start;
+    display: flex; flex-direction: column; gap: 14px;
   }
 
-  .node-card {
-    background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 20px; cursor: pointer;
-    display: flex; flex-direction: column; gap: 12px; position: relative;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ── PROTOCOL DATA PACKET BOXES ── */
+  .packet-frame {
+    border: 1px solid var(--border-solid); background: var(--bg-surface);
+    border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;
+    max-width: 85%; width: 100%;
   }
-  .node-card:hover {
-    background: rgba(255, 255, 255, 0.04); border-color: var(--accent);
-    transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  }
-  .node-meta { display: flex; align-items: center; gap: 12px; }
-  .node-avatar {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-    display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
-  }
-  .node-details { flex: 1; min-width: 0; }
-  .node-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .node-mac { font-size: 11px; color: var(--text-muted); font-family: monospace; margin-top: 2px; }
-  .node-footer { display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-top: 4px; }
-  .signal-badge { background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .packet-frame.outgoing { align-self: flex-end; border-right: 3px solid var(--neon-cyan); }
+  .packet-frame.incoming { align-self: flex-start; border-left: 3px solid var(--neon-green); }
 
-  .empty-layout {
-    grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-muted);
+  .packet-meta-top {
+    background: rgba(255,255,255,0.02); padding: 6px 12px;
+    border-bottom: 1px solid var(--border-solid);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
   }
-  .empty-layout .icon { font-size: 40px; opacity: 0.2; margin-bottom: 12px; }
-
-  /* ── PREMIUM CHAT HOOKS ── */
-  .chat-header-actions { display: flex; align-items: center; gap: 12px; }
-  .disconnect-btn {
-    padding: 8px 14px; background: rgba(244, 63, 94, 0.1); color: var(--danger);
-    border: 1px solid rgba(244, 63, 94, 0.2); border-radius: var(--radius-md);
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .disconnect-btn:hover { background: rgba(244, 63, 94, 0.2); }
-
-  .chat-messages-container {
-    flex: 1; overflow-y: auto; padding: 24px;
-    display: flex; flex-direction: column; gap: 12px;
-    background: rgba(2, 6, 17, 0.2);
-  }
-  .system-node-msg { text-align: center; font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+  .packet-payload-content { padding: 12px 16px; font-size: 14px; line-height: 1.5; color: var(--text-primary); }
   
-  .message-wrapper { display: flex; flex-direction: column; width: 100%; }
-  .message-wrapper.sent { align-items: flex-end; }
-  .message-wrapper.recv { align-items: flex-start; }
+  /* Hex File Box */
+  .hex-file-block {
+    display: flex; align-items: center; gap: 16px; background: rgba(0,0,0,0.3);
+    padding: 10px; border: 1px dashed var(--border-solid);
+  }
+  .hex-icon-indicator { font-size: 24px; color: var(--neon-cyan); }
+
+  /* Progress Line */
+  .stream-progress-container {
+    background: var(--bg-surface); border: 1px solid var(--border-solid);
+    padding: 14px; width: 340px; margin: 10px 0; font-family: var(--font-mono); align-self: flex-end;
+  }
+  .stream-progress-bar { height: 2px; background: #1e293b; margin-top: 8px; position: relative; }
+  .stream-progress-fill { height: 100%; background: var(--neon-cyan); width: 0%; transition: width 0.1s; }
+
+  .system-terminal-alert {
+    text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--neon-orange);
+    background: rgba(255, 145, 0, 0.04); padding: 6px; border: 1px dashed rgba(255, 145, 0, 0.2);
+  }
+
+  /* ── INPUT INTERFACE CONTROL ── */
+  .terminal-input-bar {
+    padding: 20px; background: var(--bg-surface);
+    border-top: 2px solid var(--border-solid);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .inject-payload-btn {
+    background: transparent; border: 1px solid var(--border-solid);
+    color: var(--text-dim); width: 44px; height: 44px; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .inject-payload-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
   
-  .bubble-text {
-    padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.5; max-width: 65%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  .terminal-textarea {
+    flex: 1; background: var(--bg-main); border: 1px solid var(--border-solid);
+    padding: 12px 16px; color: var(--neon-green); font-family: var(--font-mono);
+    font-size: 14px; outline: none; resize: none; min-height: 44px; max-height: 44px;
   }
-  .message-wrapper.sent .bubble-text {
-    background: var(--accent); color: white; border-bottom-right-radius: 2px;
-  }
-  .message-wrapper.recv .bubble-text {
-    background: rgba(51, 65, 85, 0.5); color: var(--text-main); border-bottom-left-radius: 2px;
-    border: 1px solid var(--border-color);
-  }
-  .bubble-info { font-size: 10px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-  .message-wrapper.sent .bubble-info { flex-direction: row-reverse; }
-  .ack-tick { color: var(--text-muted); }
-  .ack-tick.delivered { color: var(--success); }
+  .terminal-textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0,229,255,0.1); }
 
-  /* File Bubble Components */
-  .bubble-file-card {
-    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px; max-width: 320px;
+  .transmit-payload-btn {
+    background: rgba(0, 229, 255, 0.1); border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan); font-family: var(--font-mono); font-weight: bold;
+    padding: 0 24px; height: 44px; cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s;
   }
-  .message-wrapper.sent .bubble-file-card { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.1); }
-  .file-avatar-box {
-    width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,0.05);
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-  }
-  .file-name-string { font-size: 13px; font-weight: 600; margin-bottom: 2px; word-break: break-all; }
-  .file-size-string { font-size: 11px; color: var(--text-muted); }
+  .transmit-payload-btn:hover { background: var(--neon-cyan); color: var(--bg-main); }
 
-  /* Progress Panels */
-  .upload-progress-card {
-    background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 14px; width: 300px; margin: 8px 0;
-  }
-  .progress-header-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-  .progress-line-track { height: 4px; background: #020617; border-radius: 2px; overflow: hidden; }
-  .progress-line-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); width: 0%; transition: width 0.15s; }
-
-  /* ── CONSOLE CONTROLS BAR ── */
-  .console-bar {
-    padding: 20px 24px; border-top: 1px solid var(--border-color);
-    display: flex; align-items: center; gap: 14px; background: rgba(15, 23, 42, 0.4);
-  }
-  .console-btn {
-    width: 40px; height: 40px; border-radius: var(--radius-md); border: none;
-    background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
-    color: var(--text-main); font-size: 16px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .console-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--text-muted); }
-  .console-input-area {
-    flex: 1; background: rgba(2, 6, 17, 0.4); border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); padding: 11px 16px; color: var(--text-main); font-size: 14px;
-    outline: none; resize: none; min-height: 40px; max-height: 120px; line-height: 1.4; transition: all 0.2s;
-  }
-  .console-input-area:focus { border-color: var(--accent); background: rgba(2, 6, 17, 0.6); }
-  .console-send-btn {
-    padding: 0 18px; height: 40px; border-radius: var(--radius-md); border: none;
-    background: var(--accent); color: white; font-weight: 600; font-size: 14px;
-    cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px var(--accent-glow);
-  }
-  .console-send-btn:hover { transform: scale(1.02); }
   #file-input { display: none; }
-
-  #toast-alert {
-    position: fixed; bottom: 40px; right: 40px; background: #1e293b;
-    border-left: 4px solid var(--accent); padding: 12px 24px; border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: 500;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000;
-  }
-  #toast-alert.show { opacity: 1; }
+  
+  .empty-state-prompt { text-align: center; padding: 40px 10px; color: var(--text-dim); font-family: var(--font-mono); font-size: 13px; }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <div class="brand-zone">
-    <div class="logo">SZABIST Connect</div>
-    <div class="subtitle">P2P BLE Framework</div>
+  <div class="radar-header">
+    <div class="system-title">
+      <div class="matrix-logo">SZABIST_CONNECT //</div>
+      <div class="academic-tag">BSCS-6B // CNDC PROJECT</div>
+    </div>
+    <div class="telemetry-status">
+      <span>BLE CORRE-LINK:</span>
+      <div class="telemetry-status" style="gap:8px;">
+        <div class="radar-dot" id="global-dot"></div>
+        <span id="global-status-text" style="color: var(--text-dim);">STANDBY</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-matrix">
     
-    <div class="nav-menu">
-      <div class="nav-item active">📡 Peripheral Nodes</div>
-      <div class="nav-item">📚 CNDC Project</div>
-      <div class="nav-item">⚙️ GATT Terminal</div>
-    </div>
-  </div>
-
-  <div class="system-status">
-    <div class="status-row">
-      <span style="color: var(--text-muted);">Client Link</span>
-      <div class="status-tag">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Ready</span>
+    <div class="matrix-left">
+      <div class="control-section">
+        <button class="trigger-scan-btn" id="scan-btn" onclick="toggleScanner()">Execute RF Scan</button>
       </div>
-    </div>
-  </div>
-</div>
-
-<div class="main-workspace">
-
-  <div class="view-panel active" id="discovery-panel">
-    <div class="panel-header">
-      <div>
-        <div class="panel-title">BLE Node Discovery</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Local cluster synchronization matrix</div>
+      
+      <div class="pane-label">
+        <span>Discovered RF Channels</span>
+        <span id="node-count" style="color: var(--neon-cyan);">[00]</span>
       </div>
-      <button class="scan-control-btn" id="scan-btn" onclick="startScan()">
-        <span id="scan-icon">📡</span>
-        <span id="scan-label">Scan Cluster</span>
-      </button>
-    </div>
 
-    <div class="discovery-grid" id="device-list">
-      <div class="empty-layout" id="empty-state">
-        <div class="icon">🔍</div>
-        <p>GATT discovery channel uninitialized.<br>Trigger scan operation to map nearby class nodes.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="view-panel" id="chat-panel">
-    <div class="panel-header">
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <div class="node-avatar" id="peer-avatar" style="background: linear-gradient(135deg, #059669, #10b981);">??</div>
-        <div>
-          <div class="panel-title" id="peer-name">Node Frame</div>
-          <div style="font-size: 12px; color: var(--success); margin-top: 2px;" id="peer-link-status">GATT Channel Bound</div>
+      <div class="node-stream-container" id="device-list">
+        <div class="empty-state-prompt" id="empty-state">
+          [!] Scanner offline.<br>Initialize "Execute RF Scan" to listen for BLE advertisement vectors.
         </div>
       </div>
-      <div class="chat-header-actions">
-        <button class="disconnect-btn" onclick="goBack()">Disconnect Session</button>
+    </div>
+
+    <div class="matrix-right">
+      
+      <div class="no-session-overlay" id="lock-overlay">
+        <div>[GATT CHANNEL LOCKED]</div>
+        <div style="font-size: 12px;">Select an active peripheral node vector to bind stream filters.</div>
       </div>
-    </div>
 
-    <div class="chat-messages-container" id="messages-area">
-      <div class="system-node-msg">🔒 Symmetric Frame Layer Secured via BLE Transport Protocol</div>
-    </div>
+      <div class="terminal-stream-header">
+        <div class="active-node-info" id="active-node-label">TARGET: NULL</div>
+        <button class="transmit-payload-btn" style="height:30px; font-size:11px; border-color:#ef4444; color:#ef4444; background:transparent;" onclick="breakLink()">Drop Handle</button>
+      </div>
 
-    <div class="console-bar">
-      <button class="console-btn" onclick="triggerFile()" title="Inject Binary Frame">📎</button>
-      <textarea class="console-input-area" id="msg-input" rows="1"
-        placeholder="Type a protocol sequence message…"
-        onkeydown="handleKey(event)"
-        oninput="autoResize(this)"></textarea>
-      <button class="console-send-btn" onclick="sendText()">Transmit</button>
+      <div class="packet-logs-area" id="messages-area">
+        <div class="system-terminal-alert">FRAME LAYER CAPTURE INTERFACE INITIALIZED SUCCESSFULLY</div>
+      </div>
+
+      <div class="terminal-input-bar">
+        <button class="inject-payload-btn" onclick="triggerFileMapping()" title="Inject Binary Frame Slices">HEX</button>
+        <textarea class="terminal-textarea" id="msg-input" placeholder=">> Enter data packet sequence payload string..." onkeydown="handleKey(event)"></textarea>
+        <button class="transmit-payload-btn" onclick="transmitTextFrame()">Transmit</button>
+      </div>
+      <input type="file" id="file-input" onchange="processFileStream(event)">
+
     </div>
-    <input type="file" id="file-input" onchange="handleFile(event)">
   </div>
 
-</div>
-
-<div id="toast-alert"></div>
-
 <script>
-const CHUNK_SIZE = 512; 
+const CHUNK_SIZE = 512;
 let isScanning = false;
-let connectedPeer = null;
-let msgCounter = 0;
-let scanTimer = null;
-let msgTimer = null;
+let activePeer = null;
+let frameIndex = 0;
+let scanInterval = null;
+let responseTimeout = null;
 
-const SIM_DEVICES = [
-  { id: 'sim-1', name: "Dushant Raja", addr: 'B8:27:EB:AA:01:FF', signal: '-50 dBm' },
-  { id: 'sim-2', name: 'Rana Ali Azam', addr: 'C4:4F:33:11:CC:DD', signal: '-62 dBm' },
-  { id: 'sim-3', name: 'Mahad Naqvi', addr: 'F2:8A:88:BC:99:11', signal: '-68 dBm' }
+const SIM_NODES = [
+  { id: 'n-1', name: "Dushant Raja", addr: 'B8:27:EB:AA:01:FF', rssi: '-50 dBm' },
+  { id: 'n-2', name: 'Rana Ali Azam', addr: 'C4:4F:33:11:CC:DD', rssi: '-62 dBm' },
+  { id: 'n-3', name: 'Mahad Naqvi', addr: 'F2:8A:88:BC:99:11', rssi: '-68 dBm' }
 ];
 
-function togglePanels(showChat) {
-  if(showChat) {
-    document.getElementById('discovery-panel').classList.remove('active');
-    document.getElementById('chat-panel').classList.add('active');
-  } else {
-    document.getElementById('chat-panel').classList.remove('active');
-    document.getElementById('discovery-panel').classList.add('active');
-  }
-}
-
-function setSystemStatus(state, label) {
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-  dot.className = 'status-dot ' + state;
+function updateGlobalStatus(state, label) {
+  const dot = document.getElementById('global-dot');
+  const txt = document.getElementById('global-status-text');
+  dot.className = 'radar-dot ' + state;
   txt.textContent = label;
+  if(state === 'connected') txt.style.color = 'var(--neon-green)';
+  else if(state === 'scanning') txt.style.color = 'var(--neon-orange)';
+  else txt.style.color = 'var(--text-dim)';
 }
 
-function triggerToast(msg) {
-  const t = document.getElementById('toast-alert');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// ── DISCOVERY ENGINE ──
-function startScan() {
-  if (isScanning) { stopScan(); return; }
+// ── CYBERPUNK SCANNER ENGINE ──
+function toggleScanner() {
+  if (isScanning) { haltScanner(); return; }
 
   isScanning = true;
-  document.getElementById('scan-label').textContent = 'Halt Scanner';
-  document.getElementById('scan-icon').textContent  = '⏹';
-  document.getElementById('scan-btn').style.background = var(--danger);
-  setSystemStatus('scanning', 'Scanning');
+  document.getElementById('scan-btn').textContent = 'Halt RF Scan';
+  document.getElementById('scan-btn').style.borderColor = 'var(--neon-orange)';
+  document.getElementById('scan-btn').style.color = 'var(--neon-orange)';
+  updateGlobalStatus('scanning', 'RX_SCANNING');
 
   if(document.getElementById('empty-state')) document.getElementById('empty-state').style.display = 'none';
   document.getElementById('device-list').innerHTML = '';
 
   let idx = 0;
-  scanTimer = setInterval(() => {
-    if (idx < SIM_DEVICES.length) {
-      appendNodeCard(SIM_DEVICES[idx].name, SIM_DEVICES[idx].addr, SIM_DEVICES[idx].signal, SIM_DEVICES[idx].id);
+  scanInterval = setInterval(() => {
+    if (idx < SIM_NODES.length) {
+      renderTacticalCard(SIM_NODES[idx]);
       idx++;
+      document.getElementById('node-count').textContent = `[0${idx}]`;
     } else {
-      stopScan();
+      haltScanner();
     }
-  }, 500);
+  }, 400);
 }
 
-function stopScan() {
-  clearInterval(scanTimer);
+function haltScanner() {
+  clearInterval(scanInterval);
   isScanning = false;
-  document.getElementById('scan-label').textContent = 'Scan Cluster';
-  document.getElementById('scan-icon').textContent  = '📡';
-  document.getElementById('scan-btn').style.background = '';
-  setSystemStatus('', 'Ready');
+  document.getElementById('scan-btn').textContent = 'Execute RF Scan';
+  document.getElementById('scan-btn').style.borderColor = '';
+  document.getElementById('scan-btn').style.color = '';
+  if(!activePeer) updateGlobalStatus('', 'STANDBY');
+  else updateGlobalStatus('connected', 'GATT_BOUND');
 }
 
-function appendNodeCard(name, addr, signal, id) {
-  const grid = document.getElementById('device-list');
-  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase();
+function renderTacticalCard(node) {
+  const container = document.getElementById('device-list');
   const card = document.createElement('div');
-  card.className = 'node-card';
+  card.className = 'tactical-node-card';
+  card.id = node.id;
   card.innerHTML = `
-    <div class="node-meta">
-      <div class="node-avatar">${initials}</div>
-      <div class="node-details">
-        <div class="node-name">${name}</div>
-        <div class="node-mac">${addr}</div>
-      </div>
+    <div class="node-header-row">
+      <span class="node-title-text">${node.name}</span>
+      <span class="node-signal-dbm">${node.rssi}</span>
     </div>
-    <div class="node-footer">
-      <span style="color: var(--text-muted);">BLE Stream Channel</span>
-      <span class="signal-badge">${signal}</span>
-    </div>`;
-  card.onclick = () => bindPeerLink(name, addr);
-  grid.appendChild(card);
+    <div class="node-hardware-addr">ADDR: ${node.addr} // CH_BLE_GATT</div>`;
+  card.onclick = () => instantiateGattLink(node);
+  container.appendChild(card);
 }
 
-// ── GATT CONNECTION BINDING ──
-function bindPeerLink(name, addr) {
-  setSystemStatus('scanning', 'Binding');
-  triggerToast(`Attaching connection handle to ${name}`);
+// ── GATT HARDWARE BINDING ──
+function instantiateGattLink(node) {
+  haltScanner();
+  activePeer = node;
+  
+  document.querySelectorAll('.tactical-node-card').forEach(c => c.classList.remove('active-link'));
+  document.getElementById(node.id).classList.add('active-link');
+
+  updateGlobalStatus('scanning', 'BINDING_GATT');
   
   setTimeout(() => {
-    connectedPeer = { name, addr };
-    document.getElementById('peer-name').textContent = name;
-    document.getElementById('peer-avatar').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase();
-    togglePanels(true);
-    setSystemStatus('connected', 'Connected');
-    appendSystemLog(`GATT Channel successfully synchronized with local host: ${name}`);
+    document.getElementById('lock-overlay').style.display = 'none';
+    document.getElementById('active-node-label').textContent = `TARGET: ${node.name.toUpperCase()} // ${node.addr}`;
+    updateGlobalStatus('connected', 'GATT_BOUND');
+    pushSystemLog(`[SUCCESS] Attaching device handle. MTU size allocated: 512 Bytes.`);
     
-    msgTimer = setTimeout(() => {
-      appendMessageBlock('recv', `Network initialization handshake complete. Node stream verified.`, Date.now());
-    }, 2000);
-  }, 800);
+    responseTimeout = setTimeout(() => {
+      injectPacketFrame('incoming', `Handshake response from host internal buffers. Channel operational.`);
+    }, 1200);
+  }, 600);
 }
 
-function goBack() {
-  clearTimeout(msgTimer);
-  connectedPeer = null;
-  togglePanels(false);
-  setSystemStatus('', 'Ready');
-  document.getElementById('device-list').innerHTML = `
-    <div class="empty-layout" id="empty-state">
-      <div class="icon">🔍</div>
-      <p>GATT discovery channel uninitialized.<br>Trigger scan operation to map nearby class nodes.</p>
-    </div>`;
+function breakLink() {
+  clearTimeout(responseTimeout);
+  activePeer = null;
+  document.getElementById('lock-overlay').style.display = 'flex';
+  document.getElementById('active-node-label').textContent = 'TARGET: NULL';
+  updateGlobalStatus('', 'STANDBY');
+  document.querySelectorAll('.tactical-node-card').forEach(c => c.classList.remove('active-link'));
 }
 
-// ── CONSOLE TRANSMISSION ENGINE ──
-function sendText() {
-  const input = document.getElementById('msg-input');
-  const text  = input.value.trim();
-  if (!text) return;
+// ── FRAME INJECTION / LOGIC ──
+function transmitTextFrame() {
+  const el = document.getElementById('msg-input');
+  const text = el.value.trim();
+  if(!text) return;
 
-  const id = ++msgCounter;
-  appendMessageBlock('sent', text, Date.now(), id);
-  input.value = '';
-  autoResize(input);
+  frameIndex++;
+  injectPacketFrame('outgoing', text, frameIndex);
+  el.value = '';
 
-  setTimeout(() => triggerAckReceipt(id), 500);
-  setTimeout(() => triggerSimulatedResponse(text), 1500);
+  setTimeout(() => {
+    const ack = document.getElementById(`ack-${frameIndex}`);
+    if(ack) { ack.textContent = '[ACK_VERIFIED_✓✓]'; ack.style.color = 'var(--neon-green)'; }
+  }, 400);
+
+  setTimeout(() => {
+    const responses = [
+      "Rx segment verification complete. Frame parity checked.",
+      "Data frame committed to local registers successfully.",
+      "Buffer payload matched with core system architecture specs."
+    ];
+    const r = responses[Math.floor(Math.random() * responses.length)];
+    injectPacketFrame('incoming', r);
+  }, 1200);
 }
 
 function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
+  if(e.key === 'Enter') { e.preventDefault(); transmitTextFrame(); }
 }
 
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+function injectPacketFrame(dir, payload, id) {
+  const area = document.getElementById('messages-area');
+  const frame = document.createElement('div');
+  frame.className = `packet-frame ${dir}`;
+  
+  const hexLabel = dir === 'outgoing' ? 'TX_FRAME' : 'RX_FRAME';
+  const ackString = dir === 'outgoing' ? `<span id="ack-${id}" style="color:var(--text-dim)">[ACK_PENDING_✓]</span>` : '[VERIFIED]';
+  const ts = new Date().toISOString().slice(11,19);
+
+  frame.innerHTML = `
+    <div class="packet-meta-top">
+      <span>${hexLabel} // ID: ${id || 'N/A'}</span>
+      <span>${ackString} // TS: [${ts}]</span>
+    </div>
+    <div class="packet-payload-content">${escapeHtmlStr(payload)}</div>`;
+  
+  area.appendChild(frame);
+  scrollMonitorDown();
 }
 
-function appendMessageBlock(direction, content, timestamp, id) {
-  const zone = document.getElementById('messages-area');
-  const wrap = document.createElement('div');
-  wrap.className = `message-wrapper ${direction}`;
-  if (id) wrap.dataset.frameId = id;
+// ── BINARY HEX FILE CHUNKING ──
+function triggerFileMapping() { document.getElementById('file-input').click(); }
 
-  const timeStr = new Date(timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  const indicator = direction === 'sent' ? `<span class="ack-tick" id="tick-${id}">✓</span>` : '';
-
-  wrap.innerHTML = `
-    <div class="bubble-text">${escapeMarkup(content)}</div>
-    <div class="bubble-info">${indicator}<span>${timeStr}</span></div>`;
-  zone.appendChild(wrap);
-  scrollConsoleDown();
-}
-
-function triggerAckReceipt(id) {
-  const el = document.getElementById(`tick-${id}`);
-  if (el) { el.textContent = '✓✓'; el.classList.add('delivered'); }
-}
-
-function triggerSimulatedResponse(input) {
-  const answers = [
-    "Payload processed. Byte framing bounds align with PROTOCOL.md. 👍",
-    "GATT cache updated. Execution values logging perfectly.",
-    "Data segment synchronized across local radio registers.",
-    "Simulated frame buffers are active. Proceed with binary stream verification."
-  ];
-  const choice = answers[Math.floor(Math.random() * answers.length)];
-  appendMessageBlock('recv', choice, Date.now());
-}
-
-// ── BINARY DATA STREAM ENGINE ──
-function triggerFile() { document.getElementById('file-input').click(); }
-
-async function handleFile(e) {
+async function processFileStream(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if(!file) return;
   e.target.value = '';
 
-  const zone = document.getElementById('messages-area');
-  const prog = document.createElement('div');
-  prog.innerHTML = `
-    <div class="upload-progress-card">
-      <div class="progress-header-text">
-        <span>📦 Encapsulating: ${escapeMarkup(file.name)}</span>
-        <span id="pct-label">0%</span>
-      </div>
-      <div class="progress-line-track"><div class="progress-line-fill" id="p-fill"></div></div>
-    </div>`;
-  zone.appendChild(prog);
-  scrollConsoleDown();
-
-  const slices = Math.ceil(file.size / CHUNK_SIZE);
-  for (let i = 0; i <= slices; i++) {
-    const score = Math.round((i / slices) * 100);
-    document.getElementById('p-fill').style.width = score + '%';
-    document.getElementById('pct-label').textContent = score + '%';
-    await new Promise(r => setTimeout(r, 20)); 
-  }
-  
-  prog.remove();
-  appendFileCard('sent', file.name, file.size, Date.now());
-  triggerToast("Frame binary streaming verified.");
-}
-
-function appendFileCard(dir, name, size, ts) {
-  const zone = document.getElementById('messages-area');
-  const wrap = document.createElement('div');
-  wrap.className = `message-wrapper ${dir}`;
-  const icon = getExtensionAvatar(name);
-  const timeStr = new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  wrap.innerHTML = `
-    <div class="bubble-file-card">
-      <div class="file-avatar-box">${icon}</div>
-      <div>
-        <div class="file-name-string">${escapeMarkup(name)}</div>
-        <div class="file-size-string">${formatBytes(size)}</div>
-      </div>
+  const area = document.getElementById('messages-area');
+  const pCard = document.createElement('div');
+  pCard.className = 'stream-progress-container';
+  pCard.innerHTML = `
+    <div style="display:flex; justify-content:space-between; font-size:11px;">
+      <span>HEX_STREAM: ${escapeHtmlStr(file.name)}</span>
+      <span id="pct-count">0%</span>
     </div>
-    <div class="bubble-info"><span>${timeStr}</span></div>`;
-  zone.appendChild(wrap);
-  scrollConsoleDown();
+    <div class="stream-progress-bar"><div class="stream-progress-fill" id="p-fill"></div></div>`;
+  
+  area.appendChild(pCard);
+  scrollMonitorDown();
+
+  const blocks = Math.ceil(file.size / CHUNK_SIZE);
+  for(let i=0; i<=blocks; i++) {
+    const pct = Math.round((i / blocks) * 100);
+    document.getElementById('p-fill').style.width = pct + '%';
+    document.getElementById('pct-count').textContent = pct + '%';
+    await new Promise(r => setTimeout(r, 15));
+  }
+
+  pCard.remove();
+  
+  // Render Hex Frame Bubble
+  frameIndex++;
+  const frame = document.createElement('div');
+  frame.className = 'packet-frame outgoing';
+  const ts = new Date().toISOString().slice(11,19);
+  frame.innerHTML = `
+    <div class="packet-meta-top">
+      <span>TX_BINARY_STREAM // ID: ${frameIndex}</span>
+      <span>TS: [${ts}]</span>
+    </div>
+    <div class="packet-payload-content">
+      <div class="hex-file-block">
+        <div class="hex-icon-indicator">💾</div>
+        <div>
+          <div style="font-family:var(--font-mono); font-size:13px; font-weight:bold;">${escapeHtmlStr(file.name)}</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);">MTU_SLICES: ${blocks} // SIZE: ${file.size} Bytes</div>
+        </div>
+      </div>
+    </div>`;
+  area.appendChild(frame);
+  scrollMonitorDown();
 }
 
-function appendSystemLog(text) {
-  const zone = document.getElementById('messages-area');
+function pushSystemLog(text) {
+  const area = document.getElementById('messages-area');
   const d = document.createElement('div');
-  d.className = 'system-node-msg';
+  d.className = 'system-terminal-alert';
   d.textContent = text;
-  zone.appendChild(d);
-  scrollConsoleDown();
+  area.appendChild(d);
+  scrollMonitorDown();
 }
 
-// ── HELPERS ──
-function escapeMarkup(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function scrollConsoleDown() { const a = document.getElementById('messages-area'); a.scrollTop = a.scrollHeight; }
-function formatBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
-  return (b/(1024*1024)).toFixed(1) + ' MB';
-}
-function getExtensionAvatar(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const map = { pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', zip:'🗜', txt:'📃' };
-  return map[ext] || '📁';
-}
+function scrollMonitorDown() { const a = document.getElementById('messages-area'); a.scrollTop = a.scrollHeight; }
+function escapeHtmlStr(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
