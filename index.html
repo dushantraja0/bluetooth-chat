@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlueLink — Bluetooth Messenger</title>
+<title>SZABIST Connect — BLE Messenger</title>
 <style>
   :root {
     --bg: #0b0f19;
@@ -76,7 +76,7 @@
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    background: linear-gradient(135deg, #3b82f6, #10b981);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -273,8 +273,8 @@
 <div class="screen active" id="devices-screen">
   <div class="topbar">
     <div>
-      <div class="topbar-logo">BlueLink</div>
-      <div class="topbar-subtitle">CNDC Bluetooth Messenger</div>
+      <div class="topbar-logo">SZABIST Connect</div>
+      <div class="topbar-subtitle">P2P Bluetooth Network Layer</div>
     </div>
     <div class="status-pill" id="status-pill">
       <div class="status-dot" id="status-dot"></div>
@@ -284,8 +284,8 @@
 
   <div class="devices-body">
     <div class="ble-info">
-      <strong>BLE GATT Peer Discovery Active</strong><br>
-      This app simulates or hooks into direct BLE communication layer. Use discovered nodes below to pair instantly.
+      <strong>SZABIST Smart Local Node Discovery</strong><br>
+      Scanning system communicates over secure Bluetooth channels. Select an active peer below to instantiate GATT connection.
     </div>
 
     <button class="scan-btn" id="scan-btn" onclick="startScan()">
@@ -296,8 +296,8 @@
     <div class="section-label" id="list-label">Discovered Nodes</div>
     <div class="device-list" id="device-list">
       <div class="empty-state" id="empty-state">
-        <div class="icon">📱</div>
-        <p>No active hardware channels found yet.<br>Click Scan to populate nearby BLE devices.</p>
+        <div class="icon">💻</div>
+        <p>No active peer nodes found yet.<br>Click Scan to populate SZABIST local network.</p>
       </div>
     </div>
   </div>
@@ -343,11 +343,11 @@ let msgCounter = 0;
 let demoInterval = null;
 let demoMsgTimer = null;
 
-// Clean Simulated Array for instant failproof presentation
+// Naye Custom Names Jo Aapne Bataye
 const SIM_DEVICES = [
-  { id: 'sim-1', name: "Dushant's Laptop", addr: 'B8:27:EB:AA:01:FF', signal: '-52 dBm' },
-  { id: 'sim-2', name: 'SZABIST Peer Link', addr: 'C4:4F:33:11:CC:DD', signal: '-64 dBm' },
-  { id: 'sim-3', name: 'Remote Android Node', addr: 'F2:8A:88:BC:99:11', signal: '-71 dBm' }
+  { id: 'sim-1', name: "Dushant Rana", addr: 'B8:27:EB:AA:01:FF', signal: '-50 dBm' },
+  { id: 'sim-2', name: 'Ali Azam', addr: 'C4:4F:33:11:CC:DD', signal: '-62 dBm' },
+  { id: 'sim-3', name: 'Mahad Naqvi', addr: 'F2:8A:88:BC:99:11', signal: '-68 dBm' }
 ];
 
 function showScreen(id) {
@@ -370,7 +370,7 @@ function toast(msg, dur=2200) {
   t._timer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// ── RAPID SCANNING FLUID LOGIC ──
+// ── SCANNING LOGIC ──
 function startScan() {
   if (isScanning) { stopScan(); return; }
 
@@ -427,7 +427,7 @@ function connectTo(name, addr) {
     connectedPeer = { name, addr };
     openChat(name);
     setStatus('connected', 'Connected');
-    scheduleIncomingReplies();
+    scheduleIncomingReplies(name);
   }, 1000);
 }
 
@@ -448,7 +448,7 @@ function goBack() {
   if(document.getElementById('device-list')) document.getElementById('device-list').innerHTML = '';
 }
 
-// ── MESSAGING ARCHITECTURE (WITH BONUS DELIVERY RECEIPTS) ──
+// ── MESSAGING ARCHITECTURE ──
 function sendText() {
   const input = document.getElementById('msg-input');
   const text  = input.value.trim();
@@ -459,12 +459,10 @@ function sendText() {
   input.value = '';
   autoResize(input);
 
-  // Auto Double Tick Trigger (Delivery Acknowledgement Receipt)
   setTimeout(() => {
     markDelivered(id);
   }, 600);
 
-  // Smart Interactive Replies
   setTimeout(() => {
     triggerPeerReply(text);
   }, 1500);
@@ -502,7 +500,7 @@ function markDelivered(id) {
 
 // ── INTERACTIVE CONVERSATION REPLIES ──
 const responsePool = [
-  "Perfect! Signal metrics looks excellent on this node. 👍",
+  "Perfect! Signal metrics look excellent on this node. 👍",
   "Acknowledged. Connection payload received over custom channel.",
   "Web Bluetooth pipeline matches our byte structured design document!",
   "Great presentation flow! Let's check the binary data packet transfer next.",
@@ -510,9 +508,9 @@ const responsePool = [
 ];
 let poolIdx = 0;
 
-function scheduleIncomingReplies() {
+function scheduleIncomingReplies(name) {
   demoMsgTimer = setTimeout(() => {
-    addMessage('recv', "Hello Dushant! BlueLink node is fully initialized.", Date.now());
+    addMessage('recv', `Hello! This is ${name}. SZABIST Connect node is fully initialized.`, Date.now());
   }, 2500);
 }
 
@@ -527,7 +525,7 @@ function triggerPeerReply(userText) {
   addMessage('recv', reply, Date.now());
 }
 
-// ── BINARY FILE SIMULATION LAYER WITH REAL PROGRESS ──
+// ── BINARY FILE SIMULATION ──
 function triggerFile() {
   document.getElementById('file-input').click();
 }
@@ -550,7 +548,6 @@ async function handleFile(e) {
   area.appendChild(pRow);
   scrollDown();
 
-  // Sequential chunk processing loop simulation
   const chunks = Math.ceil(file.size / CHUNK_SIZE);
   for (let i = 0; i <= chunks; i++) {
     const pct = Math.round((i / chunks) * 100);
