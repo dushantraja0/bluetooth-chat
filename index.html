@@ -3,325 +3,327 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SZABIST Connect — BLE Packet Analyzer</title>
+<title>SZABIST Connect — Premium BLE Node</title>
 <style>
   :root {
-    --bg-main: #06070a;
-    --bg-surface: #0c0f17;
-    --bg-card: #121724;
-    --neon-cyan: #00e5ff;
-    --neon-green: #00ffaa;
-    --neon-orange: #ff9100;
-    --text-primary: #e2e8f0;
-    --text-dim: #64748b;
-    --border-glow: rgba(0, 229, 255, 0.15);
-    --border-solid: #1e293b;
-    --font-mono: 'Courier New', Courier, monospace;
+    --bg-base: #0a051b;
+    --glass-panel: rgba(25, 18, 52, 0.45);
+    --glass-card: rgba(255, 255, 255, 0.03);
+    --border-glow: rgba(118, 75, 162, 0.3);
+    --border-light: rgba(255, 255, 255, 0.07);
+    --gradient-primary: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+    --gradient-accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --text-glow: #e0f2fe;
+    --text-sub: #94a3b8;
+    --neon-green: #34d399;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(118, 75, 162, 0.25) 0%, transparent 45%),
+      radial-gradient(circle at 90% 80%, rgba(255, 117, 140, 0.15) 0%, transparent 50%);
+    color: #f8fafc;
+    font-family: 'Cabinet Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     height: 100vh;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
     overflow: hidden;
   }
 
-  /* ── SYSTEM TOP RADAR BAR ── */
-  .radar-header {
-    background: var(--bg-surface);
-    border-bottom: 2px solid var(--border-solid);
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
-  .system-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .matrix-logo {
-    font-family: var(--font-mono);
-    font-weight: 900;
-    font-size: 20px;
-    color: var(--neon-cyan);
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
-  }
-  .academic-tag {
-    background: rgba(0, 229, 255, 0.08);
-    border: 1px solid var(--neon-cyan);
-    color: var(--neon-cyan);
-    font-size: 11px;
-    font-family: var(--font-mono);
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-  .telemetry-status {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-  }
-  .radar-dot {
-    width: 10px; height: 10px; border-radius: 50%; background: #ef4444;
-    position: relative;
-  }
-  .radar-dot.active { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
-  .radar-dot.scanning { background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); animation: radarPulse 1s infinite alternate; }
-  @keyframes radarPulse { from { opacity: 0.3; } to { opacity: 1; } }
-
-  /* ── SPLIT-SCREEN MATRIX LAYOUT ── */
-  .grid-matrix {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 400px 1fr;
-    height: calc(100vh - 55px);
-  }
-
-  /* ── LEFT PANE: DISCOVERY & SIGNAL MAPPING ── */
-  .matrix-left {
-    background: var(--bg-surface);
-    border-right: 2px solid var(--border-solid);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-  }
-  .control-section {
-    margin-bottom: 24px;
-  }
-  .trigger-scan-btn {
+  /* ── MAIN SYSTEM FRAME WORKSPACE ── */
+  .app-container {
     width: 100%;
-    background: transparent;
-    border: 1px solid var(--neon-cyan);
-    color: var(--neon-cyan);
-    padding: 14px;
-    font-family: var(--font-mono);
-    font-weight: bold;
-    font-size: 14px;
-    text-transform: uppercase;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-    box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.1);
-  }
-  .trigger-scan-btn:hover {
-    background: var(--neon-cyan);
-    color: var(--bg-main);
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-  }
-  .pane-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    max-width: 1150px;
+    height: 85vh;
+    background: var(--glass-panel);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--border-light);
+    border-radius: 30px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    overflow: hidden;
   }
 
-  .node-stream-container {
-    flex: 1; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .tactical-node-card {
-    background: var(--bg-card);
-    border-left: 3px solid var(--text-dim);
-    border-top: 1px solid var(--border-solid);
-    border-right: 1px solid var(--border-solid);
-    border-bottom: 1px solid var(--border-solid);
-    padding: 16px; cursor: pointer; position: relative;
-    transition: all 0.2s ease;
-  }
-  .tactical-node-card:hover {
-    border-left-color: var(--neon-cyan);
-    background: rgba(0, 229, 255, 0.02);
-    transform: translateX(4px);
-  }
-  .tactical-node-card.active-link {
-    border-left-color: var(--neon-green);
-    background: rgba(0, 255, 170, 0.03);
-    box-shadow: 0 0 10px rgba(0, 255, 170, 0.05);
-  }
-  .node-header-row {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
-  }
-  .node-title-text { font-family: var(--font-mono); font-weight: bold; font-size: 15px; color: var(--text-primary); }
-  .node-hardware-addr { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
-  .node-signal-dbm { font-family: var(--font-mono); font-size: 12px; color: var(--neon-green); font-weight: bold; }
-
-  /* ── RIGHT PANE: REAL-TIME PACKET STREAM ── */
-  .matrix-right {
+  /* ── LEFT COMPONENT: P2P CONTROL MATRIX ── */
+  .left-workspace-panel {
+    border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
-    background: var(--bg-main);
-    position: relative;
+    padding: 35px 30px;
+    background: rgba(10, 5, 27, 0.2);
   }
-  .no-session-overlay {
-    position: absolute; inset: 0; background: var(--bg-main);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 10; font-family: var(--font-mono); color: var(--text-dim); gap: 10px;
+  .brand-header-box {
+    margin-bottom: 35px;
+  }
+  .brand-header-box h1 {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(120deg, #ff758c, #667eea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-header-box p {
+    font-size: 11px;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
   }
 
-  .terminal-stream-header {
-    background: var(--bg-surface); padding: 16px 24px;
-    border-bottom: 1px solid var(--border-solid);
-    display: flex; align-items: center; justify-content: space-between;
+  .interactive-scan-btn {
+    width: 100%;
+    background: var(--gradient-primary);
+    border: none; color: white;
+    padding: 15px; border-radius: 16px;
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 25px rgba(255, 117, 140, 0.3);
+    margin-bottom: 30px;
   }
-  .active-node-info { font-family: var(--font-mono); font-size: 14px; color: var(--neon-green); }
+  .interactive-scan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(255, 117, 140, 0.5);
+  }
+  .interactive-scan-btn:active { transform: translateY(0); }
 
-  .packet-logs-area {
-    flex: 1; overflow-y: auto; padding: 24px;
+  .section-pane-title {
+    font-size: 11px; font-weight: 700; color: var(--text-sub);
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
+    display: flex; justify-content: space-between;
+  }
+
+  .discovered-scroll-matrix {
+    flex: 1; overflow-y: auto;
     display: flex; flex-direction: column; gap: 14px;
   }
-
-  /* ── PROTOCOL DATA PACKET BOXES ── */
-  .packet-frame {
-    border: 1px solid var(--border-solid); background: var(--bg-surface);
-    border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;
-    max-width: 85%; width: 100%;
-  }
-  .packet-frame.outgoing { align-self: flex-end; border-right: 3px solid var(--neon-cyan); }
-  .packet-frame.incoming { align-self: flex-start; border-left: 3px solid var(--neon-green); }
-
-  .packet-meta-top {
-    background: rgba(255,255,255,0.02); padding: 6px 12px;
-    border-bottom: 1px solid var(--border-solid);
-    display: flex; justify-content: space-between;
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
-  }
-  .packet-payload-content { padding: 12px 16px; font-size: 14px; line-height: 1.5; color: var(--text-primary); }
   
-  /* Hex File Box */
-  .hex-file-block {
-    display: flex; align-items: center; gap: 16px; background: rgba(0,0,0,0.3);
-    padding: 10px; border: 1px dashed var(--border-solid);
+  /* NEUMORPHIC NODE CARDS */
+  .aesthetic-node-card {
+    background: var(--glass-card);
+    border: 1px solid var(--border-light);
+    border-radius: 20px; padding: 18px; cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex; align-items: center; gap: 16px;
   }
-  .hex-icon-indicator { font-size: 24px; color: var(--neon-cyan); }
+  .aesthetic-node-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 117, 140, 0.4);
+    transform: scale(1.02);
+  }
+  .aesthetic-node-card.active-session-lock {
+    background: rgba(118, 75, 162, 0.15);
+    border-color: rgba(118, 75, 162, 0.5);
+    box-shadow: 0 10px 25px rgba(118, 75, 162, 0.2);
+  }
+  .avatar-circle-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--gradient-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(118, 75, 162, 0.2);
+  }
+  .card-node-details { flex: 1; min-width: 0; }
+  .card-node-title { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+  .card-node-hardware { font-size: 11px; color: var(--text-sub); font-family: monospace; margin-top: 3px; }
+  .card-node-signal { font-size: 11px; color: var(--neon-green); font-weight: 600; text-align: right; }
 
-  /* Progress Line */
-  .stream-progress-container {
-    background: var(--bg-surface); border: 1px solid var(--border-solid);
-    padding: 14px; width: 340px; margin: 10px 0; font-family: var(--font-mono); align-self: flex-end;
+  /* ── RIGHT COMPONENT: PREMIUM CHAT HOOKS ── */
+  .right-workspace-panel {
+    display: flex; flex-direction: column; background: rgba(10, 5, 27, 0.1);
+    position: relative;
   }
-  .stream-progress-bar { height: 2px; background: #1e293b; margin-top: 8px; position: relative; }
-  .stream-progress-fill { height: 100%; background: var(--neon-cyan); width: 0%; transition: width 0.1s; }
+  .channel-locked-view {
+    position: absolute; inset: 0; background: #0c0721;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; color: var(--text-sub); text-align: center; gap: 12px;
+  }
+  .channel-locked-view .icon-lock { font-size: 48px; opacity: 0.15; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-  .system-terminal-alert {
-    text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--neon-orange);
-    background: rgba(255, 145, 0, 0.04); padding: 6px; border: 1px dashed rgba(255, 145, 0, 0.2);
+  .active-chat-bar-header {
+    padding: 24px 35px; border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(25, 18, 52, 0.2);
+  }
+  .header-node-meta { display: flex; align-items: center; gap: 16px; }
+  .header-node-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .header-node-status { font-size: 12px; color: var(--neon-green); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .header-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+
+  .disconnect-action-btn {
+    padding: 8px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light);
+    border-radius: 12px; color: #f43f5e; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .disconnect-action-btn:hover { background: rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.2); }
+
+  /* MESSAGES CONSOLE PIPELINE */
+  .fluid-scroller-messages {
+    flex: 1; overflow-y: auto; padding: 35px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .system-log-alert {
+    text-align: center; font-size: 11px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; padding: 8px 0;
   }
 
-  /* ── INPUT INTERFACE CONTROL ── */
-  .terminal-input-bar {
-    padding: 20px; background: var(--bg-surface);
-    border-top: 2px solid var(--border-solid);
-    display: flex; align-items: center; gap: 14px;
+  .message-capsule { display: flex; flex-direction: column; width: 100%; }
+  .message-capsule.sent { align-items: flex-end; }
+  .message-capsule.recv { align-items: flex-start; }
+
+  .bubble-content-text {
+    padding: 14px 20px; border-radius: 22px; font-size: 14px; line-height: 1.5; max-width: 60%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
-  .inject-payload-btn {
-    background: transparent; border: 1px solid var(--border-solid);
-    color: var(--text-dim); width: 44px; height: 44px; font-size: 18px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
+  .message-capsule.sent .bubble-content-text {
+    background: var(--gradient-accent); color: white; border-bottom-right-radius: 4px;
   }
-  .inject-payload-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+  .message-capsule.recv .bubble-content-text {
+    background: var(--glass-card); color: #f1f5f9; border-bottom-left-radius: 4px;
+    border: 1px solid var(--border-light); backdrop-filter: blur(10px);
+  }
+  .bubble-meta-info {
+    font-size: 10px; color: var(--text-sub); margin-top: 5px; display: flex; align-items: center; gap: 6px; padding: 0 4px;
+  }
+  .message-capsule.sent .bubble-meta-info { flex-direction: row-reverse; }
+  .verification-tick { color: var(--text-sub); }
+  .verification-tick.active-receipt { color: var(--neon-green); }
+
+  /* Premium File Bubble Card */
+  .file-attachment-card {
+    background: rgba(10, 5, 27, 0.4); border: 1px solid var(--border-light);
+    border-radius: 18px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; max-width: 320px;
+  }
+  .message-capsule.sent .file-attachment-card { border-color: rgba(118, 75, 162, 0.4); background: rgba(118, 75, 162, 0.15); }
+  .file-icon-avatar {
+    width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .file-label-string { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+  .file-metrics-string { font-size: 11px; color: var(--text-sub); }
+
+  /* Linear Progress Stream Bar */
+  .binary-progress-container {
+    background: var(--glass-card); border: 1px solid var(--border-light);
+    border-radius: 16px; padding: 16px; width: 320px; align-self: flex-end; margin: 8px 0;
+  }
+  .binary-progress-text { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sub); margin-bottom: 8px; }
+  .binary-line-track { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+  .binary-line-fill { height: 100%; background: var(--gradient-primary); width: 0%; transition: width 0.15s; }
+
+  /* ── CONSOLE SYSTEM BAR CONTROL ── */
+  .bottom-console-bar {
+    padding: 25px 35px; border-top: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 16px; background: rgba(25, 18, 52, 0.2);
+  }
+  .attachment-trigger-btn {
+    width: 44px; height: 44px; border-radius: 14px; border: none;
+    background: var(--glass-card); border: 1px solid var(--border-light);
+    color: white; font-size: 18px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .attachment-trigger-btn:hover { background: rgba(255,255,255,0.08); transform: scale(1.05); }
   
-  .terminal-textarea {
-    flex: 1; background: var(--bg-main); border: 1px solid var(--border-solid);
-    padding: 12px 16px; color: var(--neon-green); font-family: var(--font-mono);
-    font-size: 14px; outline: none; resize: none; min-height: 44px; max-height: 44px;
+  .console-textarea-input {
+    flex: 1; background: rgba(10, 5, 27, 0.4); border: 1px solid var(--border-light);
+    border-radius: 14px; padding: 13px 20px; color: #f8fafc;
+    font-size: 14px; outline: none; resize: none; min-height: 44px; max-height: 44px; line-height: 1.4;
   }
-  .terminal-textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0,229,255,0.1); }
+  .console-textarea-input:focus { border-color: rgba(118, 75, 162, 0.6); background: rgba(10, 5, 27, 0.6); }
 
-  .transmit-payload-btn {
-    background: rgba(0, 229, 255, 0.1); border: 1px solid var(--neon-cyan);
-    color: var(--neon-cyan); font-family: var(--font-mono); font-weight: bold;
-    padding: 0 24px; height: 44px; cursor: pointer; text-transform: uppercase;
-    transition: all 0.2s;
+  .transmit-action-btn {
+    background: var(--gradient-primary); border: none;
+    color: white; font-size: 14px; font-weight: 700;
+    padding: 0 24px; height: 44px; border-radius: 14px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 8px 20px rgba(255, 117, 140, 0.2);
   }
-  .transmit-payload-btn:hover { background: var(--neon-cyan); color: var(--bg-main); }
+  .transmit-action-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(255, 117, 140, 0.4); }
 
   #file-input { display: none; }
   
-  .empty-state-prompt { text-align: center; padding: 40px 10px; color: var(--text-dim); font-family: var(--font-mono); font-size: 13px; }
+  .empty-state-text { text-align: center; padding: 60px 10px; color: var(--text-sub); font-size: 13px; line-height: 1.6; }
+  .empty-state-text .icon { font-size: 36px; opacity: 0.2; margin-bottom: 12px; }
+
+  #custom-toast-notification {
+    position: fixed; top: 50px; right: 50px; background: rgba(25, 18, 52, 0.9);
+    border: 1px solid rgba(255, 117, 140, 0.3); backdrop-filter: blur(10px); padding: 14px 24px;
+    border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); font-size: 13px; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 2000;
+  }
+  #custom-toast-notification.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-  <div class="radar-header">
-    <div class="system-title">
-      <div class="matrix-logo">SZABIST_CONNECT //</div>
-      <div class="academic-tag">BSCS-6B // CNDC PROJECT</div>
-    </div>
-    <div class="telemetry-status">
-      <span>BLE CORRE-LINK:</span>
-      <div class="telemetry-status" style="gap:8px;">
-        <div class="radar-dot" id="global-dot"></div>
-        <span id="global-status-text" style="color: var(--text-dim);">STANDBY</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid-matrix">
+  <div class="app-container">
     
-    <div class="matrix-left">
-      <div class="control-section">
-        <button class="trigger-scan-btn" id="scan-btn" onclick="toggleScanner()">Execute RF Scan</button>
-      </div>
-      
-      <div class="pane-label">
-        <span>Discovered RF Channels</span>
-        <span id="node-count" style="color: var(--neon-cyan);">[00]</span>
+    <div class="left-workspace-panel">
+      <div class="brand-header-box">
+        <h1>SZABIST Connect</h1>
+        <p>P2P Bluetooth Mesh Framework</p>
       </div>
 
-      <div class="node-stream-container" id="device-list">
-        <div class="empty-state-prompt" id="empty-state">
-          [!] Scanner offline.<br>Initialize "Execute RF Scan" to listen for BLE advertisement vectors.
+      <button class="interactive-scan-btn" id="scan-btn" onclick="executeClusterScan()">Scan Cluster</button>
+      
+      <div class="section-pane-title">
+        <span>Available Targets</span>
+        <span id="node-counter" style="color: #ff758c;">[00]</span>
+      </div>
+
+      <div class="discovered-scroll-matrix" id="device-list">
+        <div class="empty-state-text" id="empty-state">
+          <div class="icon">📡</div>
+          <p>Discovery channel uninitialized.<br>Click Scan Cluster to resolve channels.</p>
         </div>
       </div>
     </div>
 
-    <div class="matrix-right">
+    <div class="right-workspace-panel">
       
-      <div class="no-session-overlay" id="lock-overlay">
-        <div>[GATT CHANNEL LOCKED]</div>
-        <div style="font-size: 12px;">Select an active peripheral node vector to bind stream filters.</div>
+      <div class="channel-locked-view" id="lock-overlay">
+        <div class="icon-lock">🔒</div>
+        <div style="font-weight: 600; font-size: 15px; color:#fff;">GATT Channel Unbound</div>
+        <div style="font-size: 13px; max-width: 260px; margin-top: 4px;">Synchronize an active local peripheral vector to monitor stream pipes.</div>
       </div>
 
-      <div class="terminal-stream-header">
-        <div class="active-node-info" id="active-node-label">TARGET: NULL</div>
-        <button class="transmit-payload-btn" style="height:30px; font-size:11px; border-color:#ef4444; color:#ef4444; background:transparent;" onclick="breakLink()">Drop Handle</button>
+      <div class="active-chat-bar-header">
+        <div class="header-node-meta">
+          <div class="avatar-circle-icon" id="peer-avatar" style="box-shadow: none;">??</div>
+          <div>
+            <div class="header-node-title" id="peer-name">Host Frame</div>
+            <div class="header-node-status"><div class="header-status-dot"></div><span>Channel Synchronized</span></div>
+          </div>
+        </div>
+        <button class="disconnect-action-btn" onclick="terminateSession()">Disconnect</button>
       </div>
 
-      <div class="packet-logs-area" id="messages-area">
-        <div class="system-terminal-alert">FRAME LAYER CAPTURE INTERFACE INITIALIZED SUCCESSFULLY</div>
+      <div class="fluid-scroller-messages" id="messages-area">
+        <div class="system-log-alert">🔒 Dynamic MTU Payload Link Active // GATT Security Ensured</div>
       </div>
 
-      <div class="terminal-input-bar">
-        <button class="inject-payload-btn" onclick="triggerFileMapping()" title="Inject Binary Frame Slices">HEX</button>
-        <textarea class="terminal-textarea" id="msg-input" placeholder=">> Enter data packet sequence payload string..." onkeydown="handleKey(event)"></textarea>
-        <button class="transmit-payload-btn" onclick="transmitTextFrame()">Transmit</button>
+      <div class="bottom-console-bar">
+        <button class="attachment-trigger-btn" onclick="triggerFileMapping()" title="Attach Document Pipe">📎</button>
+        <textarea class="console-textarea-input" id="msg-input" placeholder="Type a message sequence..." onkeydown="handleKey(event)"></textarea>
+        <button class="transmit-action-btn" onclick="transmitMessageBuffer()">Send</button>
       </div>
-      <input type="file" id="file-input" onchange="processFileStream(event)">
+      <input type="file" id="file-input" onchange="processFileBinary(event)">
 
     </div>
   </div>
 
+  <div id="custom-toast-notification"></div>
+
 <script>
 const CHUNK_SIZE = 512;
 let isScanning = false;
-let activePeer = null;
-let frameIndex = 0;
-let scanInterval = null;
-let responseTimeout = null;
+let boundPeer = null;
+let transactionCounter = 0;
+let scanTimer = null;
+let interfaceTimer = null;
 
 const SIM_NODES = [
   { id: 'n-1', name: "Dushant Raja", addr: 'B8:27:EB:AA:01:FF', rssi: '-50 dBm' },
@@ -329,212 +331,216 @@ const SIM_NODES = [
   { id: 'n-3', name: 'Mahad Naqvi', addr: 'F2:8A:88:BC:99:11', rssi: '-68 dBm' }
 ];
 
-function updateGlobalStatus(state, label) {
-  const dot = document.getElementById('global-dot');
-  const txt = document.getElementById('global-status-text');
-  dot.className = 'radar-dot ' + state;
-  txt.textContent = label;
-  if(state === 'connected') txt.style.color = 'var(--neon-green)';
-  else if(state === 'scanning') txt.style.color = 'var(--neon-orange)';
-  else txt.style.color = 'var(--text-dim)';
+function setSystemTelemetry(state, label) {
+  const dot = document.getElementById('status-dot');
+  // Telemetry references updated in frame matrix
 }
 
-// ── CYBERPUNK SCANNER ENGINE ──
-function toggleScanner() {
-  if (isScanning) { haltScanner(); return; }
+function displayToastAlert(msg) {
+  const t = document.getElementById('custom-toast-notification');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── SYMMETRIC MATRIX SCANNER ──
+function executeClusterScan() {
+  if (isScanning) { haltClusterScanner(); return; }
 
   isScanning = true;
-  document.getElementById('scan-btn').textContent = 'Halt RF Scan';
-  document.getElementById('scan-btn').style.borderColor = 'var(--neon-orange)';
-  document.getElementById('scan-btn').style.color = 'var(--neon-orange)';
-  updateGlobalStatus('scanning', 'RX_SCANNING');
+  document.getElementById('scan-btn').textContent = 'Halt Scanner';
+  document.getElementById('scan-btn').style.background = 'rgba(244, 63, 94, 0.8)';
+  document.getElementById('scan-btn').style.boxShadow = '0 8px 25px rgba(244, 63, 94, 0.2)';
 
   if(document.getElementById('empty-state')) document.getElementById('empty-state').style.display = 'none';
   document.getElementById('device-list').innerHTML = '';
 
   let idx = 0;
-  scanInterval = setInterval(() => {
+  scanTimer = setInterval(() => {
     if (idx < SIM_NODES.length) {
-      renderTacticalCard(SIM_NODES[idx]);
+      appendAestheticCard(SIM_NODES[idx]);
       idx++;
-      document.getElementById('node-count').textContent = `[0${idx}]`;
+      document.getElementById('node-counter').textContent = `[0${idx}]`;
     } else {
-      haltScanner();
+      haltClusterScanner();
     }
-  }, 400);
+  }, 450);
 }
 
-function haltScanner() {
-  clearInterval(scanInterval);
+function haltClusterScanner() {
+  clearInterval(scanTimer);
   isScanning = false;
-  document.getElementById('scan-btn').textContent = 'Execute RF Scan';
-  document.getElementById('scan-btn').style.borderColor = '';
-  document.getElementById('scan-btn').style.color = '';
-  if(!activePeer) updateGlobalStatus('', 'STANDBY');
-  else updateGlobalStatus('connected', 'GATT_BOUND');
+  document.getElementById('scan-btn').textContent = 'Scan Cluster';
+  document.getElementById('scan-btn').style.background = '';
+  document.getElementById('scan-btn').style.boxShadow = '';
 }
 
-function renderTacticalCard(node) {
+function appendAestheticCard(node) {
   const container = document.getElementById('device-list');
+  const initials = node.name.split(' ').map(n=>n[0]).join('').toUpperCase();
   const card = document.createElement('div');
-  card.className = 'tactical-node-card';
+  card.className = 'aesthetic-node-card';
   card.id = node.id;
   card.innerHTML = `
-    <div class="node-header-row">
-      <span class="node-title-text">${node.name}</span>
-      <span class="node-signal-dbm">${node.rssi}</span>
+    <div class="avatar-circle-icon">${initials}</div>
+    <div class="card-node-details">
+      <div class="card-node-title">${node.name}</div>
+      <div class="card-node-hardware">ADDR: ${node.addr}</div>
     </div>
-    <div class="node-hardware-addr">ADDR: ${node.addr} // CH_BLE_GATT</div>`;
-  card.onclick = () => instantiateGattLink(node);
+    <div class="card-node-signal">${node.rssi}</div>`;
+  card.onclick = () => tieGattInterface(node);
   container.appendChild(card);
 }
 
-// ── GATT HARDWARE BINDING ──
-function instantiateGattLink(node) {
-  haltScanner();
-  activePeer = node;
+// ── GATT HARDWARE TIE PIPELINE ──
+function tieGattInterface(node) {
+  haltClusterScanner();
+  boundPeer = node;
   
-  document.querySelectorAll('.tactical-node-card').forEach(c => c.classList.remove('active-link'));
-  document.getElementById(node.id).classList.add('active-link');
-
-  updateGlobalStatus('scanning', 'BINDING_GATT');
+  document.querySelectorAll('.aesthetic-node-card').forEach(c => c.classList.remove('active-session-lock'));
+  document.getElementById(node.id).classList.add('active-session-lock');
+  displayToastAlert(`Binding data frame parameters with ${node.name}`);
   
   setTimeout(() => {
     document.getElementById('lock-overlay').style.display = 'none';
-    document.getElementById('active-node-label').textContent = `TARGET: ${node.name.toUpperCase()} // ${node.addr}`;
-    updateGlobalStatus('connected', 'GATT_BOUND');
-    pushSystemLog(`[SUCCESS] Attaching device handle. MTU size allocated: 512 Bytes.`);
+    document.getElementById('peer-name').textContent = node.name;
+    document.getElementById('peer-avatar').textContent = node.name.split(' ').map(n=>n[0]).join('').toUpperCase();
     
-    responseTimeout = setTimeout(() => {
-      injectPacketFrame('incoming', `Handshake response from host internal buffers. Channel operational.`);
-    }, 1200);
-  }, 600);
+    appendSystemBufferLog(`Session channel initialized with remote host node.`);
+    
+    interfaceTimer = setTimeout(() => {
+      appendMessageCapsule('recv', `Channel check sequence complete. Ready to receive buffers.`, Date.now());
+    }, 1800);
+  }, 700);
 }
 
-function breakLink() {
-  clearTimeout(responseTimeout);
-  activePeer = null;
+function terminateSession() {
+  clearTimeout(interfaceTimer);
+  boundPeer = null;
   document.getElementById('lock-overlay').style.display = 'flex';
-  document.getElementById('active-node-label').textContent = 'TARGET: NULL';
-  updateGlobalStatus('', 'STANDBY');
-  document.querySelectorAll('.tactical-node-card').forEach(c => c.classList.remove('active-link'));
+  document.getElementById('peer-name').textContent = 'Host Frame';
+  document.querySelectorAll('.aesthetic-node-card').forEach(c => c.classList.remove('active-session-lock'));
 }
 
-// ── FRAME INJECTION / LOGIC ──
-function transmitTextFrame() {
+// ── MESSAGE ROUTING AND HANDSHAKE DELIVERIES ──
+function transmitMessageBuffer() {
   const el = document.getElementById('msg-input');
   const text = el.value.trim();
   if(!text) return;
 
-  frameIndex++;
-  injectPacketFrame('outgoing', text, frameIndex);
+  transactionCounter++;
+  appendMessageCapsule('sent', text, Date.now(), transactionCounter);
   el.value = '';
 
   setTimeout(() => {
-    const ack = document.getElementById(`ack-${frameIndex}`);
-    if(ack) { ack.textContent = '[ACK_VERIFIED_✓✓]'; ack.style.color = 'var(--neon-green)'; }
-  }, 400);
+    const tick = document.getElementById(`tick-${transactionCounter}`);
+    if(tick) { tick.textContent = '✓✓'; tick.classList.add('active-receipt'); }
+  }, 500);
 
   setTimeout(() => {
-    const responses = [
-      "Rx segment verification complete. Frame parity checked.",
-      "Data frame committed to local registers successfully.",
-      "Buffer payload matched with core system architecture specs."
+    const microResponses = [
+      "Buffer acknowledged. Verification keys match protocol specs.",
+      "Packet sequence successfully committed to host memory registers.",
+      "Data frame processed. Local bus metrics look completely stable."
     ];
-    const r = responses[Math.floor(Math.random() * responses.length)];
-    injectPacketFrame('incoming', r);
-  }, 1200);
+    const pick = microResponses[Math.floor(Math.random() * microResponses.length)];
+    appendMessageCapsule('recv', pick, Date.now());
+  }, 1600);
 }
 
 function handleKey(e) {
-  if(e.key === 'Enter') { e.preventDefault(); transmitTextFrame(); }
+  if(e.key === 'Enter') { e.preventDefault(); transmitMessageBuffer(); }
 }
 
-function injectPacketFrame(dir, payload, id) {
+function appendMessageCapsule(direction, rawText, timestamp, id) {
   const area = document.getElementById('messages-area');
-  const frame = document.createElement('div');
-  frame.className = `packet-frame ${dir}`;
+  const capsule = document.createElement('div');
+  capsule.className = `message-wrapper message-capsule ${direction}`;
   
-  const hexLabel = dir === 'outgoing' ? 'TX_FRAME' : 'RX_FRAME';
-  const ackString = dir === 'outgoing' ? `<span id="ack-${id}" style="color:var(--text-dim)">[ACK_PENDING_✓]</span>` : '[VERIFIED]';
-  const ts = new Date().toISOString().slice(11,19);
+  const timeString = new Date(timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const receipt = direction === 'sent' ? `<span class="verification-tick" id="tick-${id}">✓</span>` : '';
 
-  frame.innerHTML = `
-    <div class="packet-meta-top">
-      <span>${hexLabel} // ID: ${id || 'N/A'}</span>
-      <span>${ackString} // TS: [${ts}]</span>
-    </div>
-    <div class="packet-payload-content">${escapeHtmlStr(payload)}</div>`;
+  capsule.innerHTML = `
+    <div class="bubble-content-text">${escapeMarkupString(rawText)}</div>
+    <div class="bubble-meta-info">${receipt}<span>${timeString}</span></div>`;
   
-  area.appendChild(frame);
-  scrollMonitorDown();
+  area.appendChild(capsule);
+  scrollConsoleAreaDown();
 }
 
-// ── BINARY HEX FILE CHUNKING ──
+// ── BINARY DATA INTERFACE HANDLING ──
 function triggerFileMapping() { document.getElementById('file-input').click(); }
 
-async function processFileStream(e) {
+async function processFileBinary(e) {
   const file = e.target.files[0];
   if(!file) return;
   e.target.value = '';
 
   const area = document.getElementById('messages-area');
   const pCard = document.createElement('div');
-  pCard.className = 'stream-progress-container';
+  pCard.className = 'binary-progress-container';
   pCard.innerHTML = `
-    <div style="display:flex; justify-content:space-between; font-size:11px;">
-      <span>HEX_STREAM: ${escapeHtmlStr(file.name)}</span>
-      <span id="pct-count">0%</span>
+    <div class="binary-progress-text">
+      <span>Streaming: ${escapeMarkupString(file.name)}</span>
+      <span id="pct-label-count">0%</span>
     </div>
-    <div class="stream-progress-bar"><div class="stream-progress-fill" id="p-fill"></div></div>`;
+    <div class="binary-line-track"><div class="binary-line-fill" id="p-fill-bar"></div></div>`;
   
   area.appendChild(pCard);
-  scrollMonitorDown();
+  scrollConsoleAreaDown();
 
-  const blocks = Math.ceil(file.size / CHUNK_SIZE);
-  for(let i=0; i<=blocks; i++) {
-    const pct = Math.round((i / blocks) * 100);
-    document.getElementById('p-fill').style.width = pct + '%';
-    document.getElementById('pct-count').textContent = pct + '%';
-    await new Promise(r => setTimeout(r, 15));
+  const matrixSlices = Math.ceil(file.size / CHUNK_SIZE);
+  for(let i=0; i<=matrixSlices; i++) {
+    const score = Math.round((i / matrixSlices) * 100);
+    document.getElementById('p-fill-bar').style.width = score + '%';
+    document.getElementById('pct-label-count').textContent = score + '%';
+    await new Promise(r => setTimeout(r, 20));
   }
 
   pCard.remove();
   
-  // Render Hex Frame Bubble
-  frameIndex++;
-  const frame = document.createElement('div');
-  frame.className = 'packet-frame outgoing';
-  const ts = new Date().toISOString().slice(11,19);
-  frame.innerHTML = `
-    <div class="packet-meta-top">
-      <span>TX_BINARY_STREAM // ID: ${frameIndex}</span>
-      <span>TS: [${ts}]</span>
-    </div>
-    <div class="packet-payload-content">
-      <div class="hex-file-block">
-        <div class="hex-icon-indicator">💾</div>
-        <div>
-          <div style="font-family:var(--font-mono); font-size:13px; font-weight:bold;">${escapeHtmlStr(file.name)}</div>
-          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);">MTU_SLICES: ${blocks} // SIZE: ${file.size} Bytes</div>
-        </div>
+  // Append Finished File Element Card
+  transactionCounter++;
+  const wrap = document.createElement('div');
+  wrap.className = 'message-wrapper message-capsule sent';
+  const icon = getFileExtensionIcon(file.name);
+  const timeString = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  wrap.innerHTML = `
+    <div class="file-attachment-card">
+      <div class="file-icon-avatar">${icon}</div>
+      <div>
+        <div class="file-label-string">${escapeMarkupString(file.name)}</div>
+        <div class="file-metrics-string">CHUNKS: ${matrixSlices} // ${formatBytesCount(file.size)}</div>
       </div>
-    </div>`;
-  area.appendChild(frame);
-  scrollMonitorDown();
+    </div>
+    <div class="bubble-meta-info"><span>${timeString}</span></div>`;
+  area.appendChild(wrap);
+  scrollConsoleAreaDown();
+  displayToastAlert("Binary sequence transferred successfully.");
 }
 
-function pushSystemLog(text) {
+function appendSystemBufferLog(text) {
   const area = document.getElementById('messages-area');
   const d = document.createElement('div');
-  d.className = 'system-terminal-alert';
+  d.className = 'system-log-alert';
   d.textContent = text;
   area.appendChild(d);
-  scrollMonitorDown();
+  scrollConsoleAreaDown();
 }
 
-function scrollMonitorDown() { const a = document.getElementById('messages-area'); a.scrollTop = a.scrollHeight; }
-function escapeHtmlStr(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollConsoleAreaDown() { const a = document.getElementById('messages-area'); a.scrollTop = a.scrollHeight; }
+function escapeMarkupString(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatBytesCount(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/(1024*1024)).toFixed(1) + ' MB';
+}
+function getFileExtensionIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = { pdf:'📄', png:'🖼', jpg:'🖼', jpeg:'🖼', zip:'🗜', txt:'📃' };
+  return map[ext] || '📁';
+}
 </script>
 </body>
 </html>
