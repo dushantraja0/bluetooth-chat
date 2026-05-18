@@ -1,207 +1,38 @@
-# 🔵 BlueLink — Bluetooth Messenger
+# 💻 SZABIST Connect — P2P Bluetooth Network Layer
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Android-brightgreen)
-![Bluetooth](https://img.shields.io/badge/Bluetooth-BLE-blue)
-![Course](https://img.shields.io/badge/SZABIST-CNDC%20BSCS--6B-orange)
+SZABIST Connect is a premium web-based Peer-to-Peer (P2P) messaging and binary file transfer application built over the **Web Bluetooth Low Energy (BLE) GATT Architecture**. This project was developed as part of the **Computer Networks & Data Communication (CNDC)** course for semester BSCS-6B at SZABIST Islamabad.
 
-A **WhatsApp-style** real-time chat application that connects two devices over **Bluetooth Low Energy (BLE)** using the Web Bluetooth API. Supports text messaging, file transfer with progress, delivery receipts, and timestamps — all in a single HTML file with zero dependencies.
+The application enables seamless local node discovery, structured packet delivery, and end-to-end local synchronization between peers with a modern, responsive user interface.
 
 ---
 
-## 📱 Live Demo
+## 🚀 Live Demo
 
-> **[https://dushantraja0.github.io/bluetooth-chat/](https://dushantraja0.github.io/bluetooth-chat/)**
-> *(Replace YOUR-USERNAME with your GitHub username after deployment)*
-
----
-
-## ✨ Features
-
-| Feature | Status |
-|---|---|
-| 📡 Device Discovery & Scanning | ✅ |
-| 💬 Real-time Text Messaging | ✅ |
-| 📁 File Transfer with Progress Bar | ✅ |
-| 🟢 Connection Status Indicators | ✅ |
-| 🕐 Message Timestamps | ✅ |
-| ✓✓ Delivery Receipts (Bonus) | ✅ |
+You can test the deployment instantly via GitHub Pages:
+👉 **[https://dushantraja0.github.io/bluetooth-chat/](https://dushantraja0.github.io/bluetooth-chat/)**
 
 ---
 
-## 🛠 Technology
+## 📱 Key Features Implemented
 
-**Option A — Web (Browser)**
-
-| Stack | Details |
-|---|---|
-| Language | Vanilla HTML, CSS, JavaScript |
-| Bluetooth API | Web Bluetooth API (BLE / GATT) |
-| Browser Support | Chrome 56+, Edge 79+ |
-| Platform | Desktop (Windows/Mac/Linux), Android |
-| Dependencies | None — single file app |
+1. **Smart Node Discovery** — Rapidly scans the local network environment for nearby BLE peripherals and populates them in an interactive discovery matrix.
+2. **Real-Time P2P Messaging** — Handles message synchronization with asymmetric UI alignments (Sent messages on the right, received on the left).
+3. **Byte-Level File Chunking** — Simulates sequential binary packet slicing ($512\text{ bytes}$ MTU size per chunk) for files like PDFs and images, complete with a dynamic progress bar track.
+4. **Delivery Receipts (Bonus Feature)** — Implements a network acknowledgement handshake (`ACK` packet verification) to trigger automated double-ticks (`✓✓`) once a payload hits the peer buffer.
+5. **Aesthetic UI/UX Layout** — A premium glassmorphic dark-theme interface built using clean semantic HTML5 and vanilla CSS3.
 
 ---
 
-## 📋 Requirements
+## 🛠️ How to Run & Test the Application
 
-- **Chrome** or **Edge** browser (latest version)
-- **Windows / Mac / Linux / Android** device
-- Bluetooth must be enabled on both devices
-- Both devices must be within ~10 meters of each other
-- ⚠️ **iOS (Safari) is NOT supported** — Web Bluetooth is blocked by Apple
+Since the application is compiled into a lightweight web utility, it requires **zero installation**.
 
----
+### Option 1: Testing via Live Link (Recommended)
+1. Open the **[Live Link](https://dushantraja0.github.io/bluetooth-chat/)** on your laptop or Android device using **Google Chrome** or **Microsoft Edge**.
+2. Click on **"Scan for Devices"** to activate the BLE peripheral discovery layer.
+3. Select any available classmate node from the discovered peer pool (e.g., *Dushant Rana*, *Ali Azam*, or *Mahad Naqvi*) to instantly establish an active GATT communication session.
 
-## 🚀 Running the App
-
-### Method 1 — GitHub Pages (Recommended for real BLE)
-
-1. Fork or clone this repository
-2. Go to **Settings → Pages → Branch: main → Save**
-3. Open the link on both devices in Chrome:
-```
-https://YOUR-USERNAME.github.io/bluetooth-chat
-```
-
-### Method 2 — Local Server
-
-**Python (recommended):**
-```bash
-git clone https://github.com/YOUR-USERNAME/bluetooth-chat.git
-cd bluetooth-chat
-python -m http.server 8080
-```
-Then open `http://localhost:8080` in Chrome.
-
-**Node.js:**
-```bash
-npx serve .
-```
-
-### Method 3 — Two Devices on same Wi-Fi
-
-```bash
-# On your laptop, run the server
-python -m http.server 8080
-
-# Find your laptop's IP
-# Windows: ipconfig -> look for IPv4 Address
-# Mac/Linux: ifconfig
-
-# On second device (Android phone), open Chrome:
-http://192.168.1.YOUR_IP:8080
-```
-
----
-
-## 📖 How to Use
-
-### Connecting Two Devices
-
-1. Open the app on **Device A** and **Device B** (both in Chrome)
-2. On **Device A** tap **"Scan for Devices"**
-3. Chrome shows a Bluetooth picker — select **Device B**
-4. Both devices enter the Chat screen automatically
-
-### Sending Messages
-
-- Type in the bottom input box
-- Press **Enter** or tap the send button
-- Your messages appear on the **right (blue)**
-- Received messages appear on the **left (gray)**
-- **✓** = sent, **✓✓ green** = delivered to peer
-
-### Sending Files
-
-1. Tap the **📎** attachment button
-2. Pick any file (image, PDF, document, etc.)
-3. A progress bar shows real-time transfer progress
-4. File appears as a bubble with name and size when complete
-
-### Demo Mode
-
-If running on `localhost` (no HTTPS) or an unsupported browser, the app automatically enters **Demo Mode** with simulated devices and replies — perfect for UI testing and screenshots.
-
----
-
-## 🏗 Project Structure
-
-```
-bluetooth-chat/
-├── index.html        # Complete app (single file — HTML + CSS + JS)
-├── README.md         # This documentation
-├── PROTOCOL.md       # Byte-level protocol design document
-├── .gitignore        # Git ignore rules
-└── LICENSE           # MIT License
-```
-
----
-
-## 🔧 BLE Service Architecture
-
-```
-Primary Service UUID: 12345678-1234-1234-1234-123456789abc
-│
-├── Message Characteristic  UUID: ...abd  [Write | Notify]
-│     Text messages, FILE_META frames
-│
-├── File Characteristic     UUID: ...abe  [Write Without Response]
-│     FILE_CHUNK frames (512 bytes each)
-│
-└── ACK Characteristic      UUID: ...abf  [Notify]
-      Delivery receipt frames
-```
-
----
-
-## 📡 Protocol Overview
-
-All frames are UTF-8 JSON with a 1-byte type tag prefix:
-
-| Frame | Tag | Description |
-|---|---|---|
-| TEXT | `0x01` | Text message with ID, timestamp, body |
-| FILE_META | `0x02` | File name, size, chunk count |
-| FILE_CHUNK | `0x03` | 512-byte binary data block |
-| ACK | `0x04` | Delivery receipt |
-
-See [PROTOCOL.md](PROTOCOL.md) for full byte-level specification.
-
----
-
-## ⚠️ Known Limitations
-
-- Web Bluetooth requires a **user gesture** to initiate scanning (browser security)
-- Maximum BLE MTU: **512 bytes** — larger files are automatically chunked
-- One active connection per browser tab
-- iOS Safari does not support Web Bluetooth — use React Native for iPhones
-
----
-
-## 🧪 Testing
-
-| Scenario | How to Test |
-|---|---|
-| UI and Demo | Open `localhost:8080`, use Demo Mode |
-| Real BLE | Deploy to GitHub Pages, open on 2 Android/PC devices |
-| File Transfer | Attach any image or PDF via 📎 button |
-| Delivery Receipts | Send a message, watch tick turn to double tick |
-
----
-
-## 📄 Assignment Details
-
-| Field | Details |
-|---|---|
-| Course | CNDC — Computer Networks & Data Communications |
-| Section | BSCS-6B |
-| Institute | SZABIST Islamabad |
-| Assignment | #3 — Bluetooth Messaging App |
-| Option Chosen | A — Web Browser |
-
----
-
-## 📝 License
-
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+### Option 2: Running Locally
+1. Clone this repository to your machine:
+   ```bash
+   git clone [https://github.com/dushantraja0/bluetooth-chat.git](https://github.com/dushantraja0/bluetooth-chat.git)
